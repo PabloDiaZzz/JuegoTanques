@@ -2,7 +2,8 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main ] # Cambia a 'master' si es tu rama principal
+    branches: [ main ]
+  workflow_dispatch: # Esto te permite ejecutarlo a mano desde la web si falla
 
 permissions:
   contents: read
@@ -10,7 +11,10 @@ permissions:
   id-token: write
 
 jobs:
-  build-and-deploy:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -26,11 +30,16 @@ jobs:
         run: npm install
 
       - name: Build
-        run: npm run build-nolog # Usamos la versión sin logs
+        # Usamos tu script de build-nolog definido en package.json
+        run: npm run build-nolog
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
+          # Subimos la carpeta dist que genera el comando build
           path: './dist'
 
       - name: Deploy to GitHub Pages
