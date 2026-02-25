@@ -20,7 +20,7 @@ export default class Tank {
     private friction!: number;
     private targetAngle: number = 0;
     private trajectoryGraphics!: Phaser.GameObjects.Graphics;
-    private showTrajectory: boolean = true;
+    private showTrajectory: boolean = false;
 
     constructor(scene: GameScene, x: number, color: number, label: string) {
         this.scene = scene;
@@ -105,22 +105,16 @@ export default class Tank {
 
     handleRotation() {
         if (!this.moveMode) {
-            // 1. Bloqueo físico inmediato para evitar rebotes al caer
             this.scene.matter.body.setInertia(this.body, Infinity);
             this.scene.matter.body.setAngularVelocity(this.body, 0);
             if (!this.rotating) {
-                // Guardamos el ángulo al que queremos llegar
                 this.targetAngle = this.getGroundAngle();
-                this.rotating = true; // Bloqueamos para no volver a leer el suelo
+                this.rotating = true;
             }
-
-            // 3. Si estamos en proceso de girar, damos 1 solo pasito por frame
             if (this.rotating) {
                 this.stepRotation();
             }
-
         } else {
-            // Si volvemos a movernos, cancelamos la rotación y devolvemos la inercia
             this.rotating = false;
             if (this.body.inertia === Infinity) {
                 this.scene.matter.body.setInertia(this.body, this.originalInertia);
@@ -130,15 +124,10 @@ export default class Tank {
 
     stepRotation() {
         const diff = Phaser.Math.Angle.Wrap(this.targetAngle - this.body.angle);
-
-        // Si ya estamos casi en el objetivo...
         if (Math.abs(diff) < 0.02) {
-            // Lo clavamos en el ángulo final
             this.scene.matter.body.setAngle(this.body, this.targetAngle);
-            // Avisamos de que hemos terminado para que update pueda buscar un nuevo objetivo si hace falta
             this.rotating = false;
         } else {
-            // Si no, damos un pasito de 0.05 y nos salimos.
             const newAngle = Phaser.Math.Angle.RotateTo(this.body.angle, this.targetAngle, 0.05);
             this.scene.matter.body.setAngle(this.body, newAngle);
         }
