@@ -1,0 +1,49 @@
+# --- DEPENDENCIAS ---
+node_modules/
+.pnp
+.pnp.js
+
+# --- PRODUCCIÓN / BUILDS ---
+dist/
+dist-ssr/
+build/
+out/
+# Archivos temporales de Vite (a veces los genera al fallar)
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# --- CACHÉ Y HERRAMIENTAS ---
+.vite/
+.eslintcache
+.stylelintcache
+.parcel-cache
+.cache/
+
+# --- LOGS ---
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# --- VARIABLES DE ENTORNO (Seguridad) ---
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.local
+
+# --- EDITOR / OS ---
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
