@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import viteCompression from 'vite-plugin-compression';
 
 const phasermsg = () => {
     return {
@@ -42,6 +43,17 @@ export default defineConfig({
         port: 8080
     },
     plugins: [
-        phasermsg()
+        phasermsg(),
+        viteCompression({
+            algorithm: 'gzip',
+            ext: '.gz',
+            threshold: 1024,
+            deleteOriginFile: false
+        }),
+        viteCompression({
+            algorithm: 'brotliCompress',
+            ext: '.br',
+            threshold: 1024
+        })
     ]
 });
