@@ -7,6 +7,7 @@ import TerrainManager from '../managers/TerrainManager';
 import PlayerManager from '../managers/PlayerManager';
 import TurnManager from '../managers/TurnManager';
 import { mark as markPoint } from '../utils/AuxMethods'
+import Slider from '../ui/Slider';
 
 export class Game extends Scene {
     public players: Tank[] = [];
@@ -17,6 +18,7 @@ export class Game extends Scene {
     private textoTurno!: Phaser.GameObjects.Text;
     private inputManager!: InputManager;
     private playerManager!: PlayerManager;
+    private powerSlider!: Slider;
 
     constructor() {
         super('Game');
@@ -34,6 +36,12 @@ export class Game extends Scene {
         this.players = this.playerManager.createPlayers();
         this.turnManager = new TurnManager(this, this.players);
         this.textoTurno = this.add.text(10, 10, 'Turno: ' + this.turnManager.getCurrentPlayer().body.label, { color: '#ffffff' });
+        this.powerSlider = new Slider(this, 50, 80, 200, 150, (value) => {
+            if (this.currentTurn) {
+                this.currentTurn.power = value;
+            }
+        });
+        this.powerSlider.setValue(this.currentTurn.power);
         this.setupCollisions();
     }
 
@@ -57,6 +65,7 @@ export class Game extends Scene {
 
     switchTurn() {
         this.turnManager.nextTurn();
+        this.powerSlider.setValue(this.currentTurn.power);
     }
 
     spawnProjectile(x: number, y: number, angle: number, power: number) {

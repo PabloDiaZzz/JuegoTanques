@@ -29,20 +29,17 @@ export default class InputManager {
             }
         });
 
-        this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-            if (pointer.leftButtonDown()) {
-                const turn = this.scene.currentTurn;
-                if (turn && turn.canShoot) {
-                    turn.shoot(turn.power);
-                }
-            }
-        });
-
-        this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+        this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
+            if (gameObjects.length > 0) return;
             if (pointer.rightButtonDown()) {
                 const turn = this.scene.currentTurn;
                 if (turn && turn.canShoot) {
                     turn.toggleMode();
+                }
+            } else if (pointer.leftButtonDown()) {
+                const turn = this.scene.currentTurn;
+                if (turn && turn.canShoot) {
+                    turn.shoot(turn.power);
                 }
             }
         });
