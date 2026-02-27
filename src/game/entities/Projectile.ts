@@ -25,9 +25,13 @@ export default class Projectile {
         this.visual.setVelocity(velocityX, velocityY);
 
         scene.time.addEvent({
-            delay: 4000,
+            delay: 10000,
             callback: () => this.safeSwitchTurn()
         });
+    }
+
+    update() {
+        if (this.visual.y > this.scene.scale.height * 2 + 200) this.safeSwitchTurn();
     }
 
     safeSwitchTurn() {
