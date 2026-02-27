@@ -14,7 +14,8 @@ export default class Projectile {
             shape: 'circle',
             frictionAir: 0,
             friction: 0.05,
-            label: 'bullet'
+            label: 'bullet',
+            isBullet: true
         }) as ProjectileVisual;
 
         this.turnSwitched = false;

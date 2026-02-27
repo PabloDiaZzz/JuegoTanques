@@ -51,9 +51,9 @@ export class Game extends Scene {
 
     mark = (...args: any[]) => markPoint(this, ...args);
 
-    update() {
-        this.inputManager.update();
-        this.players.forEach(player => player.update());
+    update(time: number, delta: number) {
+        this.inputManager.update(delta);
+        this.players.forEach(player => player.update(delta));
         this.projectiles.forEach(projectile => projectile.update());
         if (this.turnManager.getPlayerCount() === 1) {
             this.scene.start('GameOver', { winner: this.players[0].body.label, color: this.players[0].bodyColor });
@@ -89,13 +89,10 @@ export class Game extends Scene {
             const targetBody = bodyA.label === 'bullet' ? bodyB : bodyA as TankBody;
 
             const projectileInstance = bulletBody.gameObject ? bulletBody.gameObject.unit : null;
-
-            if (targetBody.unit instanceof Tank) {
-                const tank = targetBody.unit;
-                if (tank && tank.takeDamage) {
-                    tank.takeDamage(25);
-                    console.log(`¡Hit! HP de ${targetBody.label}: ${tank.heal}`);
-                }
+            if (targetBody.unit && typeof targetBody.unit.takeDamage === 'function') {
+                const tank: Tank = targetBody.unit;
+                tank.takeDamage(25);
+                console.log(`¡Hit! HP de ${targetBody.label}: ${tank.heal}`);
             }
 
             if (projectileInstance && !projectileInstance.turnSwitched) {

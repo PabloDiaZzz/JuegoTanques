@@ -66,14 +66,14 @@ export default class Tank {
         this.scene.matter.body.setCentre(this.body, { x: 0, y: (this.rect.height / 2 * (2 * this.rect.originY - 1)) }, true);
     }
 
-    update(): void {
+    update(delta: number): void {
         this.container.x = this.body.position.x;
         this.container.y = this.body.position.y;
         this.container.rotation = this.body.angle;
 
         if (this.body.position.y > this.scene.scale.height * 2 + 200) this.takeDamage(100);
 
-        this.handleRotation();
+        this.handleRotation(delta);
 
         if (this.showTrajectory) this.drawTrajectory();
     }
@@ -143,7 +143,7 @@ export default class Tank {
         }
     }
 
-    private handleRotation(): void {
+    private handleRotation(delta: number): void {
         if (!this.moveMode) {
             this.scene.matter.body.setInertia(this.body, Infinity);
             this.scene.matter.body.setAngularVelocity(this.body, 0);
@@ -152,7 +152,7 @@ export default class Tank {
                 this.rotating = true;
             }
             if (this.rotating) {
-                this.stepRotation();
+                this.stepRotation(delta);
             }
         } else {
             this.rotating = false;
@@ -162,18 +162,20 @@ export default class Tank {
         }
     }
 
-    private stepRotation(): void {
+    private stepRotation(delta: number): void {
         const diff = Phaser.Math.Angle.Wrap(this.targetAngle - this.body.angle);
-        if (Math.abs(diff) < 0.02) {
+        const rotationSpeed = 0.003 * delta;
+        if (Math.abs(diff) < rotationSpeed) {
             this.scene.matter.body.setAngle(this.body, this.targetAngle);
             this.rotating = false;
         } else {
-            const newAngle = Phaser.Math.Angle.RotateTo(this.body.angle, this.targetAngle, 0.05);
+            const newAngle = Phaser.Math.Angle.RotateTo(this.body.angle, this.targetAngle, rotationSpeed);
             this.scene.matter.body.setAngle(this.body, newAngle);
         }
     }
 
-    private move(direction: string): void {
+    private move(direction: string, delta: number): void {
+        const timeCorrection: number = delta / 16.66;
         const speed: number = direction === 'left' ? -2 : 2;
         const angle: number = this.getGroundAngle();
         const posY: number = this.body.bounds.max.y;
@@ -183,7 +185,7 @@ export default class Tank {
         if (dFactor > 0 && Math.abs(this.body.angle - this.getGroundAngle()) < 1) {
             const targetVx = Math.cos(angle) * speed * dFactor;
             const targetVy = Math.sin(angle) * speed * dFactor;
-            const forceMult = 0.005 * this.body.mass;
+            const forceMult = 0.005 * this.body.mass * timeCorrection;
             const forceX = (targetVx - this.body.velocity.x) * forceMult;
             const forceY = (targetVy - this.body.velocity.y) * forceMult;
 
@@ -201,6 +203,7 @@ export default class Tank {
 
     destroy(): void {
         this.container.destroy();
+        this.scene.matter.world.remove(this.body);
         this.scene.turnManager.removePlayer(this);
     }
 
@@ -238,10 +241,10 @@ export default class Tank {
         }
     }
 
-    control(direction: string): void {
+    control(direction: string, delta: number): void {
         if (!this.canShoot) return
         if (this.moveMode) {
-            this.move(direction);
+            this.move(direction, delta);
         } else {
             this.rotateCanon(direction);
         }

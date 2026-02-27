@@ -49,7 +49,7 @@ export default class InputManager {
             if (!turn || !turn.canShoot || turn.moveMode) return;
             const sensibilidad = 1;
             for (let i = 0; i < sensibilidad; i++) {
-                turn.control(dY > 0 ? 'right' : 'left');
+                turn.control(dY > 0 ? 'right' : 'left', 16.66);
             }
         });
 
@@ -58,15 +58,15 @@ export default class InputManager {
         });
     }
 
-    public update() {
+    public update(delta: number) {
         const turn = this.scene.currentTurn;
 
         if (!turn || !turn.canShoot) return;
 
         if (this.cursors.left.isDown || this.keys.A.isDown) {
-            turn.control('left');
+            turn.control('left', delta);
         } else if (this.cursors.right.isDown || this.keys.D.isDown) {
-            turn.control('right');
+            turn.control('right', delta);
         }
     }
 }
