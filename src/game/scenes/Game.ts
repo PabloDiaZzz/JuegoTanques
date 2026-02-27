@@ -6,6 +6,7 @@ import InputManager from '../managers/InputManager';
 import TerrainManager from '../managers/TerrainManager';
 import PlayerManager from '../managers/PlayerManager';
 import TurnManager from '../managers/TurnManager';
+import { mark as markPoint } from '../utils/AuxMethods'
 
 export class Game extends Scene {
     public players: Tank[] = [];
@@ -39,6 +40,8 @@ export class Game extends Scene {
     get currentTurn(): Tank {
         return this.turnManager.getCurrentPlayer();
     }
+
+    mark = (...args: any[]) => markPoint(this, ...args);
 
     update() {
         this.inputManager.update();

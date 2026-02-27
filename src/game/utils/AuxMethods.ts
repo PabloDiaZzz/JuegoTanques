@@ -1,3 +1,5 @@
+import {Game as GameScene} from '../scenes/Game'
+
 /**
  * Calcula la posición Y interpolada entre dos puntos usando una curva de coseno.
  * @param vFrom Altura inicial (Y)
@@ -20,3 +22,14 @@ export function getInterpolationAngle(vFrom: number, vTo: number, delta: number,
     const derivative = (vTo - vFrom) * ((Math.PI * Math.sin(delta * Math.PI)) / (2 * segmentLength));
     return Math.atan(derivative);
 }
+
+export function mark(scene: GameScene, ...args: any[]) {
+    const [x, y, color = 0xff0000] = args;
+    const g: Phaser.GameObjects.Graphics = scene.add.graphics();
+    g.fillStyle(color, 1);
+    g.fillCircle(x, y, 3);
+    g.lineStyle(1, 0xffffff);
+    g.strokeCircle(x, y, 3);
+    
+    scene.time.delayedCall(3000, () => g.destroy());
+};

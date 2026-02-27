@@ -9,7 +9,7 @@ export default class InputManager {
     constructor(scene: GameScene) {
         this.scene = scene;
         this.cursors = scene.input.keyboard!.createCursorKeys();
-        this.keys = this.scene.input.keyboard!.addKeys('A,D') as { [key: string]: Phaser.Input.Keyboard.Key };
+        this.keys = this.scene.input.keyboard!.addKeys('A,D,R') as { [key: string]: Phaser.Input.Keyboard.Key };
         this.scene.input.mouse?.disableContextMenu();
         this.setupKeyboardEvents()
     }
@@ -54,6 +54,10 @@ export default class InputManager {
             for (let i = 0; i < sensibilidad; i++) {
                 turn.control(dY > 0 ? 'right' : 'left');
             }
+        });
+
+        this.scene.input.keyboard!.on('keydown-R', () => {
+            this.scene.scene.restart();
         });
     }
 
