@@ -18,7 +18,7 @@ export default class Projectile {
         }) as ProjectileVisual;
 
         this.turnSwitched = false;
-        this.visual.parentLogic = this;
+        this.visual.unit = this;
 
         const velocityX = Math.cos(angle) * (power / 5);
         const velocityY = Math.sin(angle) * (power / 5);

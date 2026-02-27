@@ -18,7 +18,7 @@ export default class Tank {
     private hpText!: Phaser.GameObjects.Text;
     private originalInertia!: number;
     private currentBarrelRotation: number;
-    private friction!: number;
+    private friction: number = 0.5;
     private targetAngle: number = 0;
     private trajectoryGraphics!: Phaser.GameObjects.Graphics;
     private showTrajectory: boolean = false;
@@ -55,7 +55,6 @@ export default class Tank {
     }
 
     private setupPhysics(x: number, y: number, label: string): void {
-        this.friction = 1;
         this.body = this.scene.matter.add.rectangle(x, y, 50, 40, {
             friction: this.friction,
             label: label,
@@ -72,14 +71,10 @@ export default class Tank {
 
         this.handleRotation();
 
-        if (!this.moveMode && this.showTrajectory) {
-            this.drawTrajectory();
-        } else {
-            this.trajectoryGraphics.clear();
-        }
+        if (this.showTrajectory) this.drawTrajectory();
     }
 
-    drawTrajectory(): void {
+    private drawTrajectory(): void {
         this.trajectoryGraphics.clear();
         if (this.moveMode || !this.canShoot) return;
         const barrelLen = this.barrel.width;
@@ -112,7 +107,7 @@ export default class Tank {
         this.trajectoryGraphics.strokePath();
     }
 
-    handleRotation() {
+    private handleRotation(): void {
         if (!this.moveMode) {
             this.scene.matter.body.setInertia(this.body, Infinity);
             this.scene.matter.body.setAngularVelocity(this.body, 0);
@@ -131,7 +126,7 @@ export default class Tank {
         }
     }
 
-    stepRotation() {
+    private stepRotation(): void {
         const diff = Phaser.Math.Angle.Wrap(this.targetAngle - this.body.angle);
         if (Math.abs(diff) < 0.02) {
             this.scene.matter.body.setAngle(this.body, this.targetAngle);

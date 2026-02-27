@@ -11,7 +11,7 @@ declare global {
     }
 
     interface ProjectileVisual extends Phaser.GameObjects.Arc, Phaser.Physics.Matter.Components.Velocity {
-        parentLogic?: Projectile;
+        unit?: Projectile;
     }
 }
 

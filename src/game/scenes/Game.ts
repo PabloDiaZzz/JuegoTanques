@@ -75,7 +75,7 @@ export class Game extends Scene {
             const bulletBody = bodyA.label === 'bullet' ? bodyA : bodyB as MatterJS.BodyType;
             const targetBody = bodyA.label === 'bullet' ? bodyB : bodyA as TankBody;
 
-            const projectileInstance = bulletBody.gameObject ? bulletBody.gameObject.parentLogic : null;
+            const projectileInstance = bulletBody.gameObject ? bulletBody.gameObject.unit : null;
 
             if (targetBody.unit instanceof Tank) {
                 const tank = targetBody.unit;
