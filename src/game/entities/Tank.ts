@@ -140,14 +140,22 @@ export default class Tank {
         }
     }
 
-    move(direction: string): void {
-        const speed = direction === 'left' ? -2 : 2;
-        const angle = this.body.angle;
+    private move(direction: string): void {
+        const speed: number = direction === 'left' ? -2 : 2;
+        const angle: number = this.getGroundAngle();
+        const posY: number = this.body.bounds.max.y;
+        const groundY: number = this.getTerrainHeight(this.body.position.x) - 2;
+        const distanceToGround = Math.abs(posY - groundY);
+        const dFactor: number = distanceToGround <= 10 ? 1 : Phaser.Math.Clamp((10 - distanceToGround) / 10, 0, 1);
+        if (dFactor > 0 && Math.abs(this.body.angle - this.getGroundAngle()) < 1) {
+            const targetVx = Math.cos(angle) * speed * dFactor;
+            const targetVy = Math.sin(angle) * speed * dFactor;
+            const forceMult = 0.005 * this.body.mass;
+            const forceX = (targetVx - this.body.velocity.x) * forceMult;
+            const forceY = (targetVy - this.body.velocity.y) * forceMult;
 
-        const vx = Math.cos(angle) * speed;
-        const vy = Math.sin(angle) * speed;
-
-        this.scene.matter.setVelocity(this.body, vx, vy);
+            this.scene.matter.applyForce(this.body, { x: forceX, y: forceY });
+        }
     }
 
     takeDamage(amount: number): void {
