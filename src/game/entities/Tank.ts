@@ -22,7 +22,8 @@ export default class Tank {
     private friction: number = 0.5;
     private targetAngle: number = 0;
     private trajectoryGraphics!: Phaser.GameObjects.Graphics;
-    private showTrajectory: boolean = false;
+    private showTrajectory: boolean = true;
+    private legitTrajectory: boolean = true;
 
     constructor(scene: GameScene, x: number, color: number, label: string) {
         this.scene = scene;
@@ -89,25 +90,57 @@ export default class Tank {
         const globalAngle = tankRotation + this.currentBarrelRotation;
         let vx = Math.cos(globalAngle) * (this.power / 5);
         let vy = Math.sin(globalAngle) * (this.power / 5);
-        this.trajectoryGraphics.lineStyle(3, 0xffffff, 0.5);
-        this.trajectoryGraphics.beginPath();
-        this.trajectoryGraphics.moveTo(px, py);
-        const gravity = 0.28;
-        const steps = 300;
 
-        for (let i = 0; i < steps; i++) {
-            vy += gravity;
-            px += vx;
-            py += vy;
-            this.trajectoryGraphics.lineTo(px, py);
-            if (i > 5) {
-                const groundY = this.scene.terrainManager.getHeightAtX(px);
-                if (py > groundY) {
-                    break;
+        const gravity: number = 0.28;
+        const steps: number = 300;
+        if (this.legitTrajectory) {
+            this.trajectoryGraphics.fillStyle(this.bodyColor, 0.8)
+            let maxPuntos: number = 5;
+            let lastDrawnX = px;
+            let lastDrawnY = py;
+            const separacionDeseada = 35;
+            for (let i = 0; i < steps; i++) {
+                vy += gravity;
+                px += vx;
+                py += vy;
+                const dx = px - lastDrawnX;
+                const dy = py - lastDrawnY;
+                const distancia = Math.sqrt(dx * dx + dy * dy);
+                if (distancia >= separacionDeseada) {
+                    this.trajectoryGraphics.fillCircle(px, py, 1.5 * maxPuntos--);
+                    lastDrawnX = px;
+                    lastDrawnY = py;
+
+                    if (maxPuntos <= 0) {
+                        break;
+                    }
+                }
+
+                if (i > 5) {
+                    const groundY = this.scene.terrainManager.getHeightAtX(px);
+                    if (py > groundY) {
+                        break;
+                    }
                 }
             }
+        } else {
+            this.trajectoryGraphics.lineStyle(3, 0xffffff, 0.5);
+            this.trajectoryGraphics.beginPath();
+            this.trajectoryGraphics.moveTo(px, py);
+            for (let i = 0; i < steps; i++) {
+                vy += gravity;
+                px += vx;
+                py += vy;
+                this.trajectoryGraphics.lineTo(px, py);
+                if (i > 5) {
+                    const groundY = this.scene.terrainManager.getHeightAtX(px);
+                    if (py > groundY) {
+                        break;
+                    }
+                }
+            }
+            this.trajectoryGraphics.strokePath();
         }
-        this.trajectoryGraphics.strokePath();
     }
 
     private handleRotation(): void {
