@@ -10,6 +10,7 @@ export default class Tank {
     public scene: GameScene;
     public body!: TankBody;
     public container!: Phaser.GameObjects.Container;
+    public bodyColor: number;
 
     private rotating: boolean = false;
     private barrel!: Phaser.GameObjects.Rectangle;
@@ -68,6 +69,8 @@ export default class Tank {
         this.container.x = this.body.position.x;
         this.container.y = this.body.position.y;
         this.container.rotation = this.body.angle;
+
+        if (this.body.position.y > this.scene.scale.height * 2 + 200) this.takeDamage(100);
 
         this.handleRotation();
 

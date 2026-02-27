@@ -6,8 +6,8 @@ export class GameOver extends Scene {
         super('GameOver');
     }
 
-    create(data: {winner: string}) {
-        this.cameras.main.setBackgroundColor(0xff0000);
+    create(data: { winner: string, color: number }) {
+        this.cameras.main.setBackgroundColor(data.color);
 
         this.add.image(screen.width / 2, screen.height / 2, 'background').setAlpha(0.5);
 

@@ -44,7 +44,7 @@ export class Game extends Scene {
         this.inputManager.update();
         this.players.forEach(player => player.update());
         if (this.turnManager.getPlayerCount() === 1) {
-            this.scene.start('GameOver', { winner: this.players[0].body.label });
+            this.scene.start('GameOver', { winner: this.players[0].body.label, color: this.players[0].bodyColor });
         }
     }
 
