@@ -25,6 +25,8 @@ export default class TurnManager {
         this.index = (this.index + 1) % this.players.length;
         const currentPlayer = this.getCurrentPlayer();
         currentPlayer.canShoot = true;
+        currentPlayer.fuel = currentPlayer.maxFuel;
+        currentPlayer.fuelbar.width = currentPlayer.fuelbarOWidth;
         this.scene.updateTurnText(`Turno: ${currentPlayer.body.label}`);
     }
 

@@ -7,10 +7,14 @@ export default class Tank {
     public canShoot: boolean = true;
     public heal: number = 100;
     public power: number = 100;
+    public fuel: number = 150;
     public scene: GameScene;
     public body!: TankBody;
     public container!: Phaser.GameObjects.Container;
     public bodyColor: number;
+    public readonly maxFuel: number = 150;
+    public fuelbar!: Phaser.GameObjects.Rectangle;
+    public fuelbarOWidth!: number;
 
     private rotating: boolean = false;
     private barrel!: Phaser.GameObjects.Rectangle;
@@ -50,6 +54,12 @@ export default class Tank {
         this.healthBar = this.scene.add.rectangle(0, - (this.rect.height * this.rect.originY) - 20, 50, 5, 0x00ff00);
         this.healthBar.setOrigin(0.5, 0.95);
         this.container.add(this.healthBar);
+
+        this.fuelbar = this.scene.add.rectangle(0, - (this.rect.height * this.rect.originY) - 12, 50, 5, 0x964B00);
+        this.fuelbarOWidth = this.fuelbar.width;
+        this.fuelbar.setOrigin(0.5, 0.95);
+        this.container.add(this.fuelbar);
+
         this.hpText = this.scene.add.text(0, - (this.rect.height * this.rect.originY) - 30, this.heal.toString(), { color: '#ffffff' });
         this.hpText.setOrigin(0.5, 0.95);
         this.container.add(this.hpText);
@@ -175,6 +185,10 @@ export default class Tank {
     }
 
     private move(direction: string, delta: number): void {
+        if (this.fuel <= 0) {
+            this.toggleMode();
+            return;
+        }
         const timeCorrection: number = delta / 16.66;
         const speed: number = direction === 'left' ? -2 : 2;
         const angle: number = this.getGroundAngle();
@@ -190,6 +204,8 @@ export default class Tank {
             const forceY = (targetVy - this.body.velocity.y) * forceMult;
 
             this.scene.matter.applyForce(this.body, { x: forceX, y: forceY });
+            this.fuel -= 1;
+            this.fuelbar.width = this.fuel / (this.maxFuel / this.fuelbarOWidth);
         }
     }
 
