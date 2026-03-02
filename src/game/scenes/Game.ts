@@ -8,6 +8,7 @@ import PlayerManager from '../managers/PlayerManager';
 import TurnManager from '../managers/TurnManager';
 import { mark as markPoint } from '../utils/AuxMethods'
 import Slider from '../ui/Slider';
+import Button from '../ui/Button';
 
 export class Game extends Scene {
     public players: Tank[] = [];
@@ -43,6 +44,10 @@ export class Game extends Scene {
         });
         this.powerSlider.setValue(this.currentTurn.power);
         this.setupCollisions();
+
+        new Button(this, 0x888888, 1600, 35, 150, 50, 'Saltar Turno', () => {
+            this.turnManager.nextTurn();
+        })
     }
 
     get currentTurn(): Tank {
