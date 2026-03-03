@@ -12,6 +12,11 @@ const config = {
     height: screen.availHeight,
     parent: 'game-container',
     backgroundColor: '#028af8',
+    render: {
+        antialias: true,
+        antialiasGL: true,
+        roundPixels: true
+    },
     physics: {
         default: 'matter',
         matter: {

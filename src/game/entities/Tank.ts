@@ -20,7 +20,7 @@ export default class Tank {
     private barrel!: Phaser.GameObjects.Rectangle;
     private rect!: Phaser.GameObjects.Rectangle;
     private healthBar!: Phaser.GameObjects.Rectangle;
-    private hpText!: Phaser.GameObjects.Text;
+    private hpText!: Phaser.GameObjects.BitmapText;
     private originalInertia!: number;
     private currentBarrelRotation: number;
     private friction: number = 0.5;
@@ -46,7 +46,7 @@ export default class Tank {
         this.trajectoryGraphics = this.scene.add.graphics();
         this.container = this.scene.add.container(x, y);
         this.rect = this.scene.add.rectangle(0, 0, 50, 40, color, 0.8);
-        this.rect.setOrigin(0.5, 0.95);
+        this.rect.setOrigin(0.5, 0.97);
         this.barrel = this.scene.add.rectangle(0, - (this.rect.height * this.rect.originY), 50, 10, color);
         this.barrel.setOrigin(0, 0.5);
         this.container.add([this.rect, this.barrel]);
@@ -60,7 +60,7 @@ export default class Tank {
         this.fuelbar.setOrigin(0.5, 0.95);
         this.container.add(this.fuelbar);
 
-        this.hpText = this.scene.add.text(0, - (this.rect.height * this.rect.originY) - 30, this.heal.toString(), { color: '#ffffff' });
+        this.hpText = this.scene.add.bitmapText(0, - (this.rect.height * this.rect.originY) - 30, 'miFuente', this.heal.toString(), 15);
         this.hpText.setOrigin(0.5, 0.95);
         this.container.add(this.hpText);
         this.hpText.setText(this.heal.toString());

@@ -30,6 +30,8 @@ export class Preloader extends Scene {
         this.load.setPath('assets');
 
         this.load.image('logo', 'logo.webp');
+
+        this.load.bitmapFont('miFuente', 'miFuente.png', 'miFuente.xml');
     }
 
     create() {

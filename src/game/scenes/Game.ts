@@ -16,7 +16,7 @@ export class Game extends Scene {
     public terrainBody!: MatterJS.BodyType[];
     public terrainManager!: TerrainManager;
     public turnManager!: TurnManager;
-    private textoTurno!: Phaser.GameObjects.Text;
+    private textoTurno!: Phaser.GameObjects.BitmapText;
     private inputManager!: InputManager;
     private playerManager!: PlayerManager;
     private powerSlider!: Slider;
@@ -36,7 +36,7 @@ export class Game extends Scene {
         this.terrainBody = this.terrainManager.createTerrain();
         this.players = this.playerManager.createPlayers();
         this.turnManager = new TurnManager(this, this.players);
-        this.textoTurno = this.add.text(10, 10, 'Turno: ' + this.turnManager.getCurrentPlayer().body.label, { color: '#ffffff' });
+        this.textoTurno = this.add.bitmapText(10, 10, 'miFuente', 'Turno: ' + this.turnManager.getCurrentPlayer().body.label, 20);
         this.powerSlider = new Slider(this, 50, 80, 200, 150, (value) => {
             if (this.currentTurn) {
                 this.currentTurn.power = value;
