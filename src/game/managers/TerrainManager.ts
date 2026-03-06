@@ -3,19 +3,19 @@ import { Game as GameScene } from "../scenes/Game";
 import { interpolate } from '../utils/AuxMethods';
 
 export default class TerrainManager {
+    public terrainPoints: { x: number, y: number }[] = [];
+
     private scene: GameScene;
     private terrainVisual!: Phaser.GameObjects.Graphics;
-
-    public terrainPoints: { x: number, y: number }[] = [];
+    private terrainBodies: MatterJS.BodyType[] = [];
+    private terrainSteps: number = 5;
 
     constructor(scene: GameScene) {
         this.scene = scene;
     }
 
     public createTerrain(): MatterJS.BodyType[] {
-        const bodies: MatterJS.BodyType[] = [];
         const width = this.scene.scale.width * 2;
-        const height = this.scene.scale.height * 2;
         const groundLevel = 600;
         const amplitude = 200;
         const slopeLengthRange = [200, 450];
@@ -40,33 +40,93 @@ export default class TerrainManager {
             const y = groundLevel + interpolate(slopeStartHeight, slopeEndHeight, delta) * amplitude;
 
             points.push({ x: currentX, y: y });
-            currentX += 5;
+            currentX += this.terrainSteps;
+        }
+        this.terrainVisual = this.scene.add.graphics();
+        this.terrainPoints = points;
+        this.updateTerrainPhysicsAndVisuals();
+
+        return this.terrainBodies;
+    }
+
+    public createCrater(impactX: number, impactY: number, radius: number = 70, depthFactor: number = 0.7): void {
+        let changed = false;
+
+        // 1. Obtenemos el ángulo del terreno en el punto de impacto
+        const angle = this.getAngleAtX(impactX);
+        const cosA = Math.cos(angle);
+        const sinA = Math.sin(angle);
+
+        // Definimos los radios de nuestra elipse (ancho vs profundidad)
+        const R = radius;
+        const r = radius * depthFactor;
+
+        // 2. Coeficientes de la ecuación de la elipse rotada (para evitar divisiones por cero)
+        const A_coeff = (Math.pow(sinA, 2) / Math.pow(R, 2)) + (Math.pow(cosA, 2) / Math.pow(r, 2));
+        const B_factor = 2 * sinA * cosA * ((1 / Math.pow(R, 2)) - (1 / Math.pow(r, 2)));
+        const C_base = (Math.pow(cosA, 2) / Math.pow(R, 2)) + (Math.pow(sinA, 2) / Math.pow(r, 2));
+
+        for (let i = 0; i < this.terrainPoints.length; i++) {
+            const p = this.terrainPoints[i];
+            const dx = p.x - impactX;
+
+            // Optimización: Si el punto está muy lejos horizontalmente, lo ignoramos
+            if (Math.abs(dx) > radius * 1.5) continue;
+
+            // 3. Resolvemos la ecuación cuadrática para encontrar la profundidad (Y) en este punto X
+            // Ecuación: A*y² + B*y + C = 1 (donde y es relativo al impacto)
+            const k2 = dx * B_factor;
+            const k3 = Math.pow(dx, 2) * C_base - 1;
+
+            // Calculamos el discriminante
+            const discriminant = Math.pow(k2, 2) - 4 * A_coeff * k3;
+
+            if (discriminant >= 0) {
+                // Buscamos la solución positiva (hacia abajo)
+                const relativeY = (-k2 + Math.sqrt(discriminant)) / (2 * A_coeff);
+                const targetY = impactY + relativeY;
+
+                // Si el nuevo punto "hunde" el terreno, lo aplicamos
+                if (targetY > p.y) {
+                    p.y = targetY;
+                    changed = true;
+                }
+            }
         }
 
-        this.terrainPoints = points;
+        if (changed) {
+            this.updateTerrainPhysicsAndVisuals();
+        }
+    }
 
-        this.terrainVisual = this.scene.add.graphics();
+    private updateTerrainPhysicsAndVisuals(): void {
+        this.terrainVisual.clear();
+
+        this.terrainBodies.forEach(body => this.scene.matter.world.remove(body));
+        this.terrainBodies = [];
+
+        const width = this.scene.scale.width * 2;
+        const height = this.scene.scale.height * 2;
+
         this.terrainVisual.fillStyle(0x654b35, 1);
         this.terrainVisual.beginPath();
         this.terrainVisual.moveTo(0, height);
-        points.forEach(p => this.terrainVisual.lineTo(p.x, p.y));
+        this.terrainPoints.forEach(p => this.terrainVisual.lineTo(p.x, p.y));
         this.terrainVisual.lineTo(width, height);
         this.terrainVisual.lineTo(0, height);
         this.terrainVisual.closePath();
         this.terrainVisual.fillPath();
 
-        // Línea de césped superior
         this.terrainVisual.lineStyle(10, 0x6b9b1e);
         this.terrainVisual.beginPath();
-        this.terrainVisual.moveTo(points[0].x, points[0].y);
-        points.forEach(p => this.terrainVisual.lineTo(p.x, p.y));
+        this.terrainVisual.moveTo(this.terrainPoints[0].x, this.terrainPoints[0].y);
+        this.terrainPoints.forEach(p => this.terrainVisual.lineTo(p.x, p.y));
         this.terrainVisual.strokePath();
 
-        const rectHeight = 100;
-
-        for (let i = 0; i < points.length - 1; i++) {
-            const p1 = points[i];
-            const p2 = points[i + 1];
+        const rectHeight = 10;
+        for (let i = 0; i < this.terrainPoints.length - 1; i++) {
+            const p1 = this.terrainPoints[i];
+            const p2 = this.terrainPoints[i + 1];
 
             const midX = (p1.x + p2.x) / 2;
             const midY = (p1.y + p2.y) / 2;
@@ -84,10 +144,8 @@ export default class TerrainManager {
                 friction: 1
             });
 
-            bodies.push(body as MatterJS.BodyType);
+            this.terrainBodies.push(body as MatterJS.BodyType);
         }
-
-        return bodies;
     }
 
     public getHeightAtX(targetX: number): number {
@@ -110,5 +168,22 @@ export default class TerrainManager {
             return Math.atan2(p2.y - p1.y, p2.x - p1.x);
         }
         return 0;
+    }
+
+    public getTerrainDistance(x1: number, x2: number): number {
+        const startX = Math.min(x1, x2);
+        const endX = Math.max(x1, x2);
+        let totalDistance = 0;
+        const steps = this.terrainSteps;
+
+        for (let x = startX; x < endX; x += steps) {
+            const nextX = Math.min(x + steps, endX);
+            const y1 = this.getHeightAtX(x);
+            const y2 = this.getHeightAtX(nextX);
+
+            totalDistance += Phaser.Math.Distance.Between(x, y1, nextX, y2);
+        }
+
+        return totalDistance;
     }
 }
