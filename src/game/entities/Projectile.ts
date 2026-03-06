@@ -1,14 +1,17 @@
 import Phaser from 'phaser';
 import { Game as GameScene } from '../scenes/Game';
+import Tank from './Tank';
 
 export default class Projectile {
     public scene: GameScene;
     public visual: ProjectileVisual;
     public turnSwitched: boolean;
+    public owner: Tank;
 
-    constructor(scene: GameScene, x: number, y: number, angle: number, power: number) {
+    constructor(scene: GameScene, x: number, y: number, angle: number, power: number, owner: Tank) {
         this.scene = scene;
         this.visual = scene.add.circle(x, y, 5, 0xffff00) as ProjectileVisual;
+        this.owner = owner;
 
         scene.matter.add.gameObject(this.visual, {
             shape: 'circle',

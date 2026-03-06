@@ -38,6 +38,8 @@ export default class TurnManager {
                 this.index--;
             }
         }
+        const currentPlayer = this.getCurrentPlayer();
+        this.scene.updateTurnText(`Turno: ${currentPlayer.body.label}`);
     }
 
     public getPlayerCount(): number {

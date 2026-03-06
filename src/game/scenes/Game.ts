@@ -9,6 +9,7 @@ import TurnManager from '../managers/TurnManager';
 import { mark as markPoint } from '../utils/AuxMethods'
 import Slider from '../ui/Slider';
 import Button from '../ui/Button';
+import Timer from '../ui/Timer';
 import Player from '../entities/Player';
 
 export class Game extends Scene {
@@ -17,6 +18,8 @@ export class Game extends Scene {
     public terrainBody!: MatterJS.BodyType[];
     public terrainManager!: TerrainManager;
     public turnManager!: TurnManager;
+    public shoot!: Phaser.Sound.BaseSound;
+    public turnTimer!: Timer;
     public lastImpacts: Map<string, Phaser.Math.Vector2> = new Map();
     public lastGlobalImpact: Phaser.Math.Vector2 | null = null;
     private textoTurno!: Phaser.GameObjects.BitmapText;
@@ -33,6 +36,7 @@ export class Game extends Scene {
         this.inputManager = new InputManager(this);
         this.terrainManager = new TerrainManager(this);
         this.playerManager = new PlayerManager(this);
+        this.shoot = this.sound.add('shoot').setVolume(0.3);
         this.cameras.main.setZoom(0.7);
         this.cameras.main.centerOn(this.scale.width / 2, this.scale.height / 2);
         this.cameras.main.setBounds(0, 0, this.scale.width, this.scale.height);

@@ -43,16 +43,22 @@ export default class Tank {
 
         this.currentBarrelRotation = (x > this.scene.scale.width / 2) ? -Math.PI : 0;
         this.barrel.rotation = this.currentBarrelRotation;
+        this.lastX = this.body.position.x;
+        this.lastY = this.body.position.y;
     }
 
     private setupVisuals(x: number, y: number, color: number): void {
         this.trajectoryGraphics = this.scene.add.graphics();
         this.container = this.scene.add.container(x, y);
-        this.rect = this.scene.add.rectangle(0, 0, 50, 40, color, 0.8);
-        this.rect.setOrigin(0.5, 0.97);
-        this.barrel = this.scene.add.rectangle(0, - (this.rect.height * this.rect.originY), 50, 10, color);
-        this.barrel.setOrigin(0, 0.5);
-        this.container.add([this.rect, this.barrel]);
+        this.rect = this.scene.add.rectangle(0, 0, 80, 50, color, 0.8);
+        this.rect.setOrigin(0.5, 0.9);
+        const bodySprite = this.scene.add.image(0, 0, 'tank_body').setDisplaySize(80, 50);
+        bodySprite.setOrigin(0.5, 0.7);
+        bodySprite.setTint(color);
+        this.barrel = this.scene.add.image(0, -25, 'tank_barrel').setScale(0.55);
+        this.barrel.setTint(color);
+        this.barrel.setOrigin(0.1, 0.5);
+        this.container.add([this.barrel, bodySprite]);
 
         this.healthBar = this.scene.add.rectangle(0, - (this.rect.height * this.rect.originY) - 20, 50, 5, 0x00ff00);
         this.healthBar.setOrigin(0.5, 0.95);
@@ -63,20 +69,23 @@ export default class Tank {
         this.fuelbar.setOrigin(0.5, 0.95);
         this.container.add(this.fuelbar);
 
-        this.hpText = this.scene.add.bitmapText(0, - (this.rect.height * this.rect.originY) - 30, 'miFuente', this.heal.toString(), 15);
+        this.hpText = this.scene.add.bitmapText(0, - (this.rect.height * this.rect.originY) - 30, 'miFuente', this.health.toString(), 15);
         this.hpText.setOrigin(0.5, 0.95);
         this.container.add(this.hpText);
-        this.hpText.setText(this.heal.toString());
+        this.hpText.setText(this.health.toString());
     }
 
     private setupPhysics(x: number, y: number, label: string): void {
-        this.body = this.scene.matter.add.rectangle(x, y, 50, 40, {
+        this.body = this.scene.matter.add.rectangle(x, y, 80, 50, {
             friction: this.friction,
             label: label,
+            chamfer: { radius: [0, 0, 20, 20] }
         }) as TankBody;
         this.body.unit = this;
+        this.scene.matter.body.setInertia(this.body, this.body.inertia * 10);
         this.originalInertia = this.body.inertia;
-        this.scene.matter.body.setCentre(this.body, { x: 0, y: (this.rect.height / 2 * (2 * this.rect.originY - 1)) }, true);
+        this.defaultYCenter = this.rect.height / 2 * (2 * this.rect.originY - 1);
+        this.scene.matter.body.setCentre(this.body, { x: 0, y: this.defaultYCenter }, true);
     }
 
     update(delta: number): void {
@@ -89,12 +98,32 @@ export default class Tank {
         this.handleRotation(delta);
 
         if (this.showTrajectory) this.drawTrajectory();
+
+        this.handleFuel();
+    }
+
+    private handleFuel() {
+        if (this.scene.currentTurn != this) return;
+        const distance = Phaser.Math.Distance.Between(
+            this.body.position.x,
+            this.body.position.y,
+            this.lastX,
+            this.lastY
+        );
+        if (this.fuel > 0 && distance > 0.01) {
+            this.fuel -= distance * this.fuelCost;
+            if (this.fuel < 0) this.fuel = 0;
+
+            this.fuelbar.width = this.fuel / (this.maxFuel / this.fuelbarOWidth);
+        }
+        this.lastX = this.body.position.x;
+        this.lastY = this.body.position.y;
     }
 
     private drawTrajectory(): void {
         this.trajectoryGraphics.clear();
-        if (this.moveMode || !this.canShoot) return;
-        const barrelLen = this.barrel.width;
+        if (this.moveMode || !this.canShoot || this.scene.currentTurn !== this) return;
+        const barrelLen = this.barrel.displayWidth;
         const localMuzzleX = Math.cos(this.currentBarrelRotation) * barrelLen;
         const localMuzzleY = this.barrel.y + Math.sin(this.currentBarrelRotation) * barrelLen;
         const tankRotation = this.container.rotation;
@@ -200,16 +229,28 @@ export default class Tank {
         const distanceToGround = Math.abs(posY - groundY);
         const dFactor: number = distanceToGround <= 20 ? 1 : Phaser.Math.Clamp((40 - distanceToGround) / 20, 0, 1);
         if (dFactor > 0 && Math.abs(this.body.angle - this.getGroundAngle()) < 1) {
-            const targetVx = Math.cos(angle) * speed * dFactor;
-            const targetVy = Math.sin(angle) * speed * dFactor;
-            const forceMult = 0.005 * this.body.mass * timeCorrection;
-            const forceX = (targetVx - this.body.velocity.x) * forceMult;
-            const forceY = (targetVy - this.body.velocity.y) * forceMult;
-
-            this.scene.matter.applyForce(this.body, { x: forceX, y: forceY });
-            this.fuel -= 1;
-            this.fuelbar.width = this.fuel / (this.maxFuel / this.fuelbarOWidth);
+            this.applyMovementForce(angle, speed, dFactor, timeCorrection, direction);
         }
+    }
+
+    protected applyMovementForce(angle: number, speed: number, dFactor: number, timeCorrection: number, direction: string) {
+        const targetVx = Math.cos(angle) * speed * dFactor;
+        const targetVy = Math.sin(angle) * speed * dFactor;
+        const forceMult = 0.005 * this.body.mass * timeCorrection;
+        const forceX = (targetVx - this.body.velocity.x) * forceMult;
+        const forceY = (targetVy - this.body.velocity.y) * forceMult * 0.5;
+
+        this.scene.matter.applyForce(this.body, { x: forceX, y: forceY });
+        const backOffset = direction === 'left' ? 20 : -20;
+        const backPosition = {
+            x: this.body.position.x + (backOffset * (Phaser.Math.RadToDeg(angle) > 45 ? -1 : 1)),
+            y: this.body.position.y
+        };
+        const stabilityFactor = Math.abs(Math.cos(2 * angle));
+        this.scene.matter.body.applyForce(this.body, backPosition, {
+            x: 0,
+            y: 0.005 * this.body.mass * stabilityFactor
+        });
     }
 
     takeDamage(amount: number): void {
@@ -251,11 +292,11 @@ export default class Tank {
         this.moveMode = !this.moveMode;
         if (this.moveMode) {
             this.scene.matter.body.setInertia(this.body, this.originalInertia);
-            this.rect.setFillStyle(this.bodyColor, 0.8)
-            this.barrel.setFillStyle(this.bodyColor)
+            // this.rect.setFillStyle(this.bodyColor, 0.8)
+            // this.barrel.setFillStyle(this.bodyColor)
         } else {
-            this.rect.setFillStyle(this.bodyColor)
-            this.barrel.setFillStyle(this.bodyColor, 0.8)
+            // this.rect.setFillStyle(this.bodyColor)
+            // this.barrel.setFillStyle(this.bodyColor, 0.8)
         }
     }
 
@@ -281,7 +322,7 @@ export default class Tank {
     shoot(power: number): void {
         if (!this.canShoot) return;
 
-        const barrelLen: number = this.barrel.width;
+        const barrelLen: number = this.barrel.displayWidth;
         const localMuzzleX: number = Math.cos(this.currentBarrelRotation) * barrelLen;
         const localMuzzleY: number = this.barrel.y + Math.sin(this.currentBarrelRotation) * barrelLen;
         const tankRotation: number = this.container.rotation;
