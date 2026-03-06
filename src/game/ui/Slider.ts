@@ -33,4 +33,14 @@ export default class Slider {
         const p = Phaser.Math.Clamp(value / this.limit, 0, 1);
         this.handle.y = this.track.y + (this.height * (1 - p));
     }
+
+    public setVisible(visible: boolean = true): void {
+        this.track.setVisible(visible);
+        this.handle.setVisible(visible);
+        if (visible) {
+            this.handle.setInteractive();
+        } else {
+            this.handle.disableInteractive();
+        }
+    }
 }

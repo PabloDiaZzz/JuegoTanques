@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { Game as GameScene } from '../scenes/Game';
+import Player from '../entities/Player';
 
 export default class InputManager {
     private scene: GameScene;
@@ -15,7 +16,13 @@ export default class InputManager {
     }
 
     private setupKeyboardEvents() {
+        const isPlayerTurn = () => {
+            const turn = this.scene.currentTurn;
+            return turn && turn.canShoot && turn instanceof Player;
+        };
+
         this.scene.input.keyboard!.on('keydown-SPACE', () => {
+            if (!isPlayerTurn()) return;
             const turn = this.scene.currentTurn;
             if (turn && turn.canShoot) {
                 turn.toggleMode();
@@ -23,6 +30,7 @@ export default class InputManager {
         });
 
         this.scene.input.keyboard!.on('keydown-UP', () => {
+            if (!isPlayerTurn()) return;
             const turn = this.scene.currentTurn;
             if (turn && turn.canShoot) {
                 turn.shoot(turn.power);
@@ -31,6 +39,7 @@ export default class InputManager {
 
         this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
             if (gameObjects.length > 0) return;
+            if (!isPlayerTurn()) return;
             if (pointer.rightButtonDown()) {
                 const turn = this.scene.currentTurn;
                 if (turn && turn.canShoot) {
@@ -45,6 +54,7 @@ export default class InputManager {
         });
 
         this.scene.input.on('wheel', (pointer: Phaser.Input.Pointer, gameObjects: any, dX: number, dY: number) => {
+            if (!isPlayerTurn()) return;
             const turn = this.scene.currentTurn;
             if (!turn || !turn.canShoot || turn.moveMode) return;
             const sensibilidad = 1;
@@ -61,7 +71,7 @@ export default class InputManager {
     public update(delta: number) {
         const turn = this.scene.currentTurn;
 
-        if (!turn || !turn.canShoot) return;
+        if (!turn || !turn.canShoot || !(turn instanceof Player)) return;
 
         if (this.cursors.left.isDown || this.keys.A.isDown) {
             turn.control('left', delta);

@@ -1,11 +1,10 @@
 import * as Phaser from 'phaser';
-import Projectile from './Projectile';
 import { Game as GameScene } from '../scenes/Game';
 
 export default class Tank {
     public moveMode: boolean = true;
     public canShoot: boolean = true;
-    public heal: number = 100;
+    public health: number = 100;
     public power: number = 100;
     public fuel: number = 150;
     public scene: GameScene;
@@ -16,24 +15,28 @@ export default class Tank {
     public fuelbar!: Phaser.GameObjects.Rectangle;
     public fuelbarOWidth!: number;
 
-    private rotating: boolean = false;
-    private barrel!: Phaser.GameObjects.Rectangle;
-    private rect!: Phaser.GameObjects.Rectangle;
-    private healthBar!: Phaser.GameObjects.Rectangle;
-    private hpText!: Phaser.GameObjects.BitmapText;
-    private originalInertia!: number;
-    private currentBarrelRotation: number;
-    private friction: number = 0.5;
-    private targetAngle: number = 0;
-    private trajectoryGraphics!: Phaser.GameObjects.Graphics;
-    private showTrajectory: boolean = true;
-    private legitTrajectory: boolean = true;
+    protected fuelCost: number = 0.4;
+    protected rotating: boolean = false;
+    protected barrel!: Phaser.GameObjects.Image;
+    protected rect!: Phaser.GameObjects.Rectangle;
+    protected healthBar!: Phaser.GameObjects.Rectangle;
+    protected hpText!: Phaser.GameObjects.BitmapText;
+    protected originalInertia!: number;
+    protected currentBarrelRotation: number;
+    protected friction: number = 0.5;
+    protected targetAngle: number = 0;
+    protected trajectoryGraphics!: Phaser.GameObjects.Graphics;
+    protected showTrajectory: boolean = true;
+    protected legitTrajectory: boolean = false;
+    protected defaultYCenter: number = 0;
+    protected lastX: number = 0;
+    protected lastY: number = 0;
 
     constructor(scene: GameScene, x: number, color: number, label: string) {
         this.scene = scene;
         this.bodyColor = color;
 
-        const y: number = this.getTerrainHeight(x) - 30;
+        const y: number = this.getTerrainHeight(x) - 50;
 
         this.setupVisuals(x, y, color);
         this.setupPhysics(x, y, label);
@@ -184,18 +187,18 @@ export default class Tank {
         }
     }
 
-    private move(direction: string, delta: number): void {
+    protected move(direction: string, delta: number): void {
         if (this.fuel <= 0) {
             this.toggleMode();
             return;
         }
         const timeCorrection: number = delta / 16.66;
         const speed: number = direction === 'left' ? -2 : 2;
-        const angle: number = this.getGroundAngle();
+        const angle: number = this.getGroundAngle(this.body.position.x + 5 * speed);
         const posY: number = this.body.bounds.max.y;
         const groundY: number = this.getTerrainHeight(this.body.position.x) - 2;
         const distanceToGround = Math.abs(posY - groundY);
-        const dFactor: number = distanceToGround <= 10 ? 1 : Phaser.Math.Clamp((10 - distanceToGround) / 10, 0, 1);
+        const dFactor: number = distanceToGround <= 20 ? 1 : Phaser.Math.Clamp((40 - distanceToGround) / 20, 0, 1);
         if (dFactor > 0 && Math.abs(this.body.angle - this.getGroundAngle()) < 1) {
             const targetVx = Math.cos(angle) * speed * dFactor;
             const targetVy = Math.sin(angle) * speed * dFactor;
@@ -210,11 +213,11 @@ export default class Tank {
     }
 
     takeDamage(amount: number): void {
-        this.heal -= amount;
-        if (this.heal <= 0) this.heal = 0;
-        this.healthBar.width = this.heal / 2;
-        this.hpText.setText(this.heal.toString());
-        if (this.heal === 0) this.destroy();
+        this.health -= amount;
+        if (this.health <= 0) this.health = 0;
+        this.healthBar.width = this.health / 2;
+        this.hpText.setText(this.health.toString());
+        if (this.health === 0) this.destroy();
     }
 
     destroy(): void {
@@ -227,8 +230,7 @@ export default class Tank {
         return this.scene.terrainManager.getHeightAtX(x);
     }
 
-    getGroundAngle(): number {
-        const x = this.body.position.x;
+    getGroundAngle(x: number = this.body.position.x): number {
         const mathGroundY = this.scene.terrainManager.getHeightAtX(x);
         const distanceToGround = mathGroundY - this.body.position.y;
 
@@ -292,12 +294,34 @@ export default class Tank {
 
         const globalAngle: number = tankRotation + this.currentBarrelRotation;
 
-        this.scene.spawnProjectile(worldMuzzleX, worldMuzzleY, globalAngle, power);
-
+        this.scene.spawnProjectile(worldMuzzleX, worldMuzzleY, globalAngle, power, this);
         this.canShoot = false;
     }
 
     checkTurn(): boolean {
         return this.scene.currentTurn === this;
+    }
+
+    public checkLineOfSight(x1: number, y1: number, x2: number, y2: number): boolean {
+        const distance = Phaser.Math.Distance.Between(x1, y1, x2, y2);
+        const steps = Math.floor(distance / 10);
+
+        for (let i = 1; i <= steps; i++) {
+            const t = i / steps;
+            const checkX = Phaser.Math.Linear(x1, x2, t);
+            const checkY = Phaser.Math.Linear(y1, y2, t);
+
+            const terrainHeight = this.getTerrainHeight(checkX);
+            if (checkY > terrainHeight) return false;
+        }
+        return true;
+    }
+
+    public canSeeFrom(fromX: number, fromY: number, target: Tank): boolean {
+        return this.checkLineOfSight(fromX, fromY, target.body.position.x, target.body.position.y - 20);
+    }
+
+    public canSee(target: Tank): boolean {
+        return this.canSeeFrom(this.body.position.x, this.body.position.y - 20, target);
     }
 }

@@ -9,6 +9,7 @@ import TurnManager from '../managers/TurnManager';
 import { mark as markPoint } from '../utils/AuxMethods'
 import Slider from '../ui/Slider';
 import Button from '../ui/Button';
+import Player from '../entities/Player';
 
 export class Game extends Scene {
     public players: Tank[] = [];
@@ -16,6 +17,8 @@ export class Game extends Scene {
     public terrainBody!: MatterJS.BodyType[];
     public terrainManager!: TerrainManager;
     public turnManager!: TurnManager;
+    public lastImpacts: Map<string, Phaser.Math.Vector2> = new Map();
+    public lastGlobalImpact: Phaser.Math.Vector2 | null = null;
     private textoTurno!: Phaser.GameObjects.BitmapText;
     private inputManager!: InputManager;
     private playerManager!: PlayerManager;
@@ -46,8 +49,11 @@ export class Game extends Scene {
         this.setupCollisions();
 
         new Button(this, 0x888888, 1600, 35, 150, 50, 'Saltar Turno', () => {
-            this.turnManager.nextTurn();
-        })
+            this.switchTurn();
+        });
+
+        this.turnTimer = new Timer(this, this.scale.width / 2, -120, 80, 50, 20, () => this.switchTurn());
+        this.updateUIVisibility();
     }
 
     get currentTurn(): Tank {
@@ -57,12 +63,13 @@ export class Game extends Scene {
     mark = (...args: any[]) => markPoint(this, ...args);
 
     update(time: number, delta: number) {
+        if (this.turnManager.getPlayerCount() === 1) {
+            this.scene.start('GameOver', { type: 'win', winner: this.players[0].body.label, color: this.players[0].bodyColor });
+        }
         this.inputManager.update(delta);
+        this.turnTimer.update(delta);
         this.players.forEach(player => player.update(delta));
         this.projectiles.forEach(projectile => projectile.update());
-        if (this.turnManager.getPlayerCount() === 1) {
-            this.scene.start('GameOver', { winner: this.players[0].body.label, color: this.players[0].bodyColor });
-        }
     }
 
     updateTurnText(text: string) {
@@ -72,10 +79,14 @@ export class Game extends Scene {
     switchTurn() {
         this.turnManager.nextTurn();
         this.powerSlider.setValue(this.currentTurn.power);
+        this.updateUIVisibility();
+        this.turnTimer.reset();
+        this.turnTimer.resume();
     }
 
-    spawnProjectile(x: number, y: number, angle: number, power: number) {
-        this.projectiles.push(new Projectile(this, x, y, angle, power));
+    spawnProjectile(x: number, y: number, angle: number, power: number, owner: Tank) {
+        // TODO this.shoot.play();
+        this.projectiles.push(new Projectile(this, x, y, angle, power, owner));
     }
 
     private setupCollisions() {
@@ -92,17 +103,30 @@ export class Game extends Scene {
         if (bodyA.label === 'bullet' || bodyB.label === 'bullet') {
             const bulletBody = bodyA.label === 'bullet' ? bodyA : bodyB as MatterJS.BodyType;
             const targetBody = bodyA.label === 'bullet' ? bodyB : bodyA as TankBody;
+            const impactPos = new Phaser.Math.Vector2(bulletBody.position.x, bulletBody.position.y);
+            this.lastGlobalImpact = impactPos;
 
-            const projectileInstance = bulletBody.gameObject ? bulletBody.gameObject.unit : null;
+            const projectileInstance: Projectile | null = bulletBody.gameObject ? bulletBody.gameObject.unit : null;
+            if (projectileInstance && projectileInstance.owner) {
+                this.lastImpacts.set(projectileInstance.owner.body.label, impactPos);
+            }
             if (targetBody.unit && typeof targetBody.unit.takeDamage === 'function') {
                 const tank: Tank = targetBody.unit;
                 tank.takeDamage(25);
-                console.log(`¡Hit! HP de ${targetBody.label}: ${tank.heal}`);
+                console.log(`¡Hit! HP de ${targetBody.label}: ${tank.health}`);
+            } else if (targetBody.label == 'ground') {
+                this.terrainManager.createCrater(bulletBody.position.x, bulletBody.position.y, 70);
             }
 
             if (projectileInstance && !projectileInstance.turnSwitched) {
                 projectileInstance.safeSwitchTurn();
             }
+            this.cameras.main.shake(100, 0.01);
         }
+    }
+
+    public updateUIVisibility(): void {
+        const isHuman = this.currentTurn instanceof Player;
+        this.powerSlider.setVisible(isHuman);
     }
 }
