@@ -119,7 +119,14 @@ export default class CPU extends Tank {
     }
 
     private handleShot(): void {
-        this.shoot(this.power);
+        let finalPower = this.power;
+
+        if (this.level === 1) {
+            finalPower += Phaser.Math.Between(-10, 10);
+        } else if (this.level === 2) {
+            finalPower += Phaser.Math.Between(-3, 3);
+        }
+        this.shoot(finalPower);
         this.searchedAngle = false;
         this.body.isStatic = false;
         this.state = 'waiting';

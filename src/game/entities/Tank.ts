@@ -27,7 +27,7 @@ export default class Tank {
     protected targetAngle: number = 0;
     protected trajectoryGraphics!: Phaser.GameObjects.Graphics;
     protected showTrajectory: boolean = true;
-    protected legitTrajectory: boolean = false;
+    protected legitTrajectory: boolean = true;
     protected defaultYCenter: number = 0;
     protected lastX: number = 0;
     protected lastY: number = 0;
