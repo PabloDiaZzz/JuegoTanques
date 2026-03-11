@@ -38,5 +38,9 @@ export class GameOver extends Scene {
 
             this.scene.start('MainMenu');
         });
+
+        this.input.keyboard!.on('keydown-SPACE', () => {
+            this.scene.start('MainMenu');
+        });
     }
 }

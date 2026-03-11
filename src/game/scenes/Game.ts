@@ -80,6 +80,10 @@ export class Game extends Scene {
 
         this.turnTimer = new Timer(this, this.scale.width / 2, -120, 80, 50, 20, () => this.switchTurn());
         this.updateUIVisibility();
+        this.events.on('shutdown', () => {
+            this.projectiles.forEach(p => p.destroy());
+            this.projectiles = [];
+        });
     }
 
     get currentTurn(): Tank {

@@ -123,13 +123,12 @@ export default class Tank {
     private drawTrajectory(): void {
         this.trajectoryGraphics.clear();
         if (this.moveMode || !this.canShoot || this.scene.currentTurn !== this) return;
-        const barrelLen = this.barrel.displayWidth;
-        const localMuzzleX = Math.cos(this.currentBarrelRotation) * barrelLen;
-        const localMuzzleY = this.barrel.y + Math.sin(this.currentBarrelRotation) * barrelLen;
-        const tankRotation = this.container.rotation;
-        let px = this.container.x + (localMuzzleX * Math.cos(tankRotation) - localMuzzleY * Math.sin(tankRotation));
-        let py = this.container.y + (localMuzzleX * Math.sin(tankRotation) + localMuzzleY * Math.cos(tankRotation));
-        const globalAngle = tankRotation + this.currentBarrelRotation;
+
+        const cannon = this.getCannonPosition(this.currentBarrelRotation);
+        let px = cannon.x;
+        let py = cannon.y;
+
+        const globalAngle = this.container.rotation + this.currentBarrelRotation;
         let vx = Math.cos(globalAngle) * (this.power / 5);
         let vy = Math.sin(globalAngle) * (this.power / 5);
 
@@ -183,6 +182,18 @@ export default class Tank {
             }
             this.trajectoryGraphics.strokePath();
         }
+    }
+
+    protected getCannonPosition(angle: number): { x: number, y: number } {
+        const cannonLen = this.barrel.displayWidth;
+        const localCannonX = Math.cos(angle) * cannonLen;
+        const localCannonY = this.barrel.y + Math.sin(angle) * cannonLen;
+        const tankRotation = this.container.rotation;
+
+        const x = this.container.x + (localCannonX * Math.cos(tankRotation) - localCannonY * Math.sin(tankRotation));
+        const y = this.container.y + (localCannonX * Math.sin(tankRotation) + localCannonY * Math.cos(tankRotation));
+
+        return { x, y };
     }
 
     private handleRotation(delta: number): void {
@@ -292,11 +303,6 @@ export default class Tank {
         this.moveMode = !this.moveMode;
         if (this.moveMode) {
             this.scene.matter.body.setInertia(this.body, this.originalInertia);
-            // this.rect.setFillStyle(this.bodyColor, 0.8)
-            // this.barrel.setFillStyle(this.bodyColor)
-        } else {
-            // this.rect.setFillStyle(this.bodyColor)
-            // this.barrel.setFillStyle(this.bodyColor, 0.8)
         }
     }
 
@@ -305,11 +311,11 @@ export default class Tank {
         if (this.moveMode) {
             this.move(direction, delta);
         } else {
-            this.rotateCanon(direction);
+            this.rotateCannon(direction);
         }
     }
 
-    rotateCanon(direction: string): void {
+    rotateCannon(direction: string): void {
         const angle = direction === 'left' ? -0.03 : 0.03;
         this.currentBarrelRotation = Phaser.Math.Clamp(
             this.currentBarrelRotation + angle,
@@ -322,20 +328,10 @@ export default class Tank {
     shoot(power: number): void {
         if (!this.canShoot) return;
 
-        const barrelLen: number = this.barrel.displayWidth;
-        const localMuzzleX: number = Math.cos(this.currentBarrelRotation) * barrelLen;
-        const localMuzzleY: number = this.barrel.y + Math.sin(this.currentBarrelRotation) * barrelLen;
-        const tankRotation: number = this.container.rotation;
+        const cannon = this.getCannonPosition(this.currentBarrelRotation);
+        const globalAngle = this.container.rotation + this.currentBarrelRotation;
 
-        const worldMuzzleX: number = this.container.x +
-            (localMuzzleX * Math.cos(tankRotation) - localMuzzleY * Math.sin(tankRotation));
-
-        const worldMuzzleY: number = this.container.y +
-            (localMuzzleX * Math.sin(tankRotation) + localMuzzleY * Math.cos(tankRotation));
-
-        const globalAngle: number = tankRotation + this.currentBarrelRotation;
-
-        this.scene.spawnProjectile(worldMuzzleX, worldMuzzleY, globalAngle, power, this);
+        this.scene.spawnProjectile(cannon.x, cannon.y, globalAngle, power, this);
         this.canShoot = false;
     }
 
@@ -364,5 +360,19 @@ export default class Tank {
 
     public canSee(target: Tank): boolean {
         return this.canSeeFrom(this.body.position.x, this.body.position.y - 20, target);
+    }
+
+    protected isStable(): boolean {
+        const velocityThreshold = 0.2;     // Px / frame
+        const angularThreshold = 0.02;     // Rads / frame
+
+        const isPhysicallyMoving = Math.abs(this.body.velocity.x) > velocityThreshold ||
+            Math.abs(this.body.velocity.y) > velocityThreshold;
+
+        const isPhysicallyRotating = Math.abs(this.body.angularVelocity) > angularThreshold;
+
+        const isAligningWithGround = this.rotating;
+
+        return !isPhysicallyMoving && !isPhysicallyRotating && !isAligningWithGround;
     }
 }

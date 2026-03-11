@@ -35,6 +35,7 @@ export default class Projectile {
     }
 
     update() {
+        if (!this.visual || !this.visual.active || !this.visual.body) return;
         if (this.visual.y > this.scene.scale.height * 2 + 200) this.safeSwitchTurn();
     }
 

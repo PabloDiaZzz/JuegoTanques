@@ -2,13 +2,13 @@ import Tank from "./Tank";
 import { Game as GameScene } from '../scenes/Game';
 
 export default class CPU extends Tank {
-    public level: number = 1;
+    public level: number = Phaser.Math.Between(1, 3);
 
     private target: Tank | null = null;
     private state: 'moving' | 'aiming' | 'shooting' | 'waiting' = 'waiting';
     private actionTimer: number = 0;
     private destinationX: number | null = null;
-    private canonAngle: number = - Math.PI / 4;
+    private cannonAngle: number = - Math.PI / 4;
     private searchedAngle: boolean = false;
 
     constructor(scene: GameScene, x: number, color: number, label: string) {
@@ -89,9 +89,9 @@ export default class CPU extends Tank {
         const isEnemyRight = this.target!.body.position.x > this.body.position.x;
         const sideLimit = isEnemyRight ? Math.PI / 8 : -9 * Math.PI / 8;
 
-        if (!this.alignCanon(this.canonAngle)) return;
+        if (!this.alignCannon(this.cannonAngle)) return;
 
-        this.power = this.findBestPower(this.canonAngle);
+        this.power = this.findBestPower(this.cannonAngle);
 
         switch (this.level) {
             case 1:
@@ -99,7 +99,7 @@ export default class CPU extends Tank {
                 break;
             case 2:
                 if (this.power === 0 && !this.searchedAngle) {
-                    this.canonAngle = Phaser.Math.FloatBetween(upLimit, sideLimit);
+                    this.cannonAngle = Phaser.Math.FloatBetween(upLimit, sideLimit);
                     this.searchedAngle = true;
                     return;
                 }
@@ -107,7 +107,7 @@ export default class CPU extends Tank {
                 break;
             case 3:
                 if (this.power === 0) {
-                    this.canonAngle = Phaser.Math.FloatBetween(upLimit, sideLimit);
+                    this.cannonAngle = Phaser.Math.FloatBetween(upLimit, sideLimit);
                     return;
                 }
                 break;
@@ -122,7 +122,7 @@ export default class CPU extends Tank {
         let finalPower = this.power;
 
         if (this.level === 1) {
-            finalPower += Phaser.Math.Between(-10, 10);
+            finalPower += Phaser.Math.Between(-7, 7);
         } else if (this.level === 2) {
             finalPower += Phaser.Math.Between(-3, 3);
         }
@@ -153,8 +153,8 @@ export default class CPU extends Tank {
         const isEnemyRight = target.body.position.x > this.body.position.x;
         const sideLimit = isEnemyRight ? Math.PI / 8 : -9 * Math.PI / 8;
         const upLimit = -Math.PI / 2;
-        if (this.level === 3) this.canonAngle = Phaser.Math.FloatBetween(upLimit, sideLimit);
-        else this.canonAngle = isEnemyRight ? - Math.PI / 4 : - 3 * Math.PI / 4;
+        if (this.level === 3) this.cannonAngle = Phaser.Math.FloatBetween(upLimit, sideLimit);
+        else this.cannonAngle = isEnemyRight ? - Math.PI / 4 : - 3 * Math.PI / 4;
         return target;
     }
 
@@ -177,10 +177,9 @@ export default class CPU extends Tank {
 
     private findBestPosition(): number {
         const currentX = this.body.position.x;
-        const maxDistance = this.fuel / this.fuelCost;
         const enemy = this.target;
         const range = this.fuel / this.fuelCost;
-        const dangerThreshold = 150;
+        const dangerMargin = 150;
         let finalPoint: number = currentX;
 
         switch (this.level) {
@@ -191,7 +190,7 @@ export default class CPU extends Tank {
                 break;
             case 2:
                 const lastImpact = this.scene.lastGlobalImpact;
-                const isNearImpact = lastImpact && Math.abs(lastImpact.x - currentX) < dangerThreshold;
+                const isNearImpact = lastImpact && Math.abs(lastImpact.x - currentX) < dangerMargin;
                 finalPoint = (() => {
                     let final;
                     let attempts = 0;
@@ -200,7 +199,7 @@ export default class CPU extends Tank {
                         final = Phaser.Math.Clamp(final, 50, this.scene.scale.width - 50);
                         const distToImpact = lastImpact ? Math.abs(final - lastImpact.x) : Infinity;
                         attempts++;
-                        if (isNearImpact && distToImpact < dangerThreshold) continue;
+                        if (isNearImpact && distToImpact < dangerMargin) continue;
                     } while (!this.canReach(final) && attempts < 15);
                     return (attempts < 15) ? final : currentX;
                 })();
@@ -220,8 +219,8 @@ export default class CPU extends Tank {
                     // ANTI-IMPACTOS
                     this.scene.lastImpacts.forEach((impactPos, playerLabel) => {
                         const dist = Math.abs(testX - impactPos.x);
-                        if (dist < dangerThreshold) {
-                            currentScore -= (dangerThreshold - dist) * 15;
+                        if (dist < dangerMargin) {
+                            currentScore -= (dangerMargin - dist) * 25;
                         }
                     });
 
@@ -240,16 +239,16 @@ export default class CPU extends Tank {
                     currentScore += heightBonus;
 
                     // OFENSIVO
-                    if (this.target && this.canSeeFrom(testX, testY, this.target)) {
+                    if (enemy && this.canSeeFrom(testX, testY, enemy)) {
                         currentScore += 1000;
                     }
 
                     // SIGILO
                     this.scene.players.forEach(p => {
-                        if (p === this || p === this.target) return;
+                        if (p === this || p === enemy) return;
                         const dist = Phaser.Math.Distance.Between(testX, testY, p.body.position.x, p.body.position.y);
                         if (!p.checkLineOfSight(p.body.position.x, p.body.position.y - 20, testX, testY)) {
-                            currentScore += (20000 / dist);
+                            currentScore += (100000 / dist);
                         } else {
                             if (dist < 400) currentScore -= 500;
                         }
@@ -311,10 +310,10 @@ export default class CPU extends Tank {
         let validPowers: number[] = [];
         let bestPower = 0;
         let minDistance = Infinity;
-
+        let maxDistance = this.level === 3 ? 25 : (this.level === 2 ? 200 : Infinity);
         const targetX = this.target.body.position.x;
         const targetY = this.target.body.position.y;
-        const precision = this.level === 3 ? 1 : 5;
+        const precision = this.level === 3 ? 1 : (this.level === 2 ? 5 : 10);
 
         for (let p = 10; p <= 150; p += precision) {
             const impact = this.simulateShot(angle, p);
@@ -353,7 +352,7 @@ export default class CPU extends Tank {
             return bestSequence[middleIndex];
         }
 
-        if (minDistance <= 30) {
+        if (minDistance <= maxDistance) {
             return bestPower;
         }
 
@@ -361,18 +360,15 @@ export default class CPU extends Tank {
     }
 
     public simulateShot(angle: number, power: number): { x: number, y: number, hitTank: boolean } | null {
-        const gravity = 0.28;
-        const barrelLen = this.barrel.displayWidth;
-        const localMuzzleX = Math.cos(angle) * barrelLen;
-        const localMuzzleY = this.barrel.y + Math.sin(angle) * barrelLen;
-        const tankRotation = this.container.rotation;
+        const cannon = this.getCannonPosition(angle);
+        let px = cannon.x;
+        let py = cannon.y;
 
-        let px = this.container.x + (localMuzzleX * Math.cos(tankRotation) - localMuzzleY * Math.sin(tankRotation));
-        let py = this.container.y + (localMuzzleX * Math.sin(tankRotation) + localMuzzleY * Math.cos(tankRotation));
-
-        const globalAngle = tankRotation + angle;
+        const globalAngle = this.container.rotation + angle;
         let vx = Math.cos(globalAngle) * (power / 5);
         let vy = Math.sin(globalAngle) * (power / 5);
+
+        const gravity = 0.28;
 
         for (let i = 0; i < 300; i++) {
             vy += gravity;
@@ -396,7 +392,7 @@ export default class CPU extends Tank {
         return { x: px, y: py, hitTank: false };
     }
 
-    private alignCanon(angle: number): boolean {
+    private alignCannon(angle: number): boolean {
         if (this.moveMode) {
             this.toggleMode();
             return false;
@@ -409,21 +405,7 @@ export default class CPU extends Tank {
             return true;
         }
         const direction = diff > 0 ? 'right' : 'left';
-        this.rotateCanon(direction);
+        this.rotateCannon(direction);
         return false;
-    }
-
-    private isStable(): boolean {
-        const velocityThreshold = 0.2;     // Px / frame
-        const angularThreshold = 0.02;     // Rads / frame
-
-        const isPhysicallyMoving = Math.abs(this.body.velocity.x) > velocityThreshold ||
-            Math.abs(this.body.velocity.y) > velocityThreshold;
-
-        const isPhysicallyRotating = Math.abs(this.body.angularVelocity) > angularThreshold;
-
-        const isAligningWithGround = this.rotating;
-
-        return !isPhysicallyMoving && !isPhysicallyRotating && !isAligningWithGround;
     }
 }
