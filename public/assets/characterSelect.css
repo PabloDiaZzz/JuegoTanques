@@ -1,0 +1,257 @@
+body {
+    background-color: #171717;
+}
+
+.menu-container {
+    /* background: rgba(15, 20, 25, 0.95); */
+    top: 100px;
+    padding: 30px;
+    border-radius: 12px;
+    color: white;
+    font-family: Arial, sans-serif;
+    width: 450px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.menu-container h2 {
+    text-align: center;
+    color: #7008e7;
+    margin-top: 0;
+}
+
+.player-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 18px;
+    transition: transform 0.2s;
+}
+
+.reorder-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.reorder-controls button {
+    background: #555;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 10px;
+    padding: 2px 5px;
+    border-radius: 5px;
+}
+
+.reorder-controls button:hover {
+    background: #7008e7;
+    color: black;
+}
+
+.p-name {
+    border: 1px solid #dddddd;
+    background: #fff;
+    color: black;
+    padding: 5px 10px;
+    font-family: inherit;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: 0.4s;
+    outline: none;
+    border-radius: 8px;
+
+    &::placeholder {
+        color: #999999;
+        transition: 0.3s;
+    }
+
+    &:hover {
+        background: #f5f5f5;
+        border-color: #ccc;
+    }
+
+    &:focus {
+        background: #fff;
+        border-color: #8e51ff;
+        box-shadow: 0 0 0 2px rgba(142, 81, 255, 0.1);
+    }
+}
+
+select,
+::picker(select) {
+    appearance: base-select;
+}
+
+.p-type {
+    border: 1px solid #dddddd;
+    background: #fff;
+    color: black;
+    padding: 3px 5px;
+    cursor: pointer;
+    transition: 0.4s;
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    &>button {
+        appearance: none;
+        background: transparent;
+        border: none;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-family: inherit;
+        font-size: inherit;
+    }
+
+    &:hover,
+    &:focus {
+        background: #dddddd;
+    }
+
+    &::picker(select) {
+        border: 1px solid #dddddd;
+        border-radius: 8px;
+        background: white;
+        padding: 0;
+    }
+
+    &::picker-icon {
+        color: #999999;
+        transition: 0.4s rotate;
+    }
+
+    &:open::picker-icon {
+        rotate: 180deg;
+    }
+
+    option {
+        display: flex;
+        align-items: center;
+        justify-content: start;
+        gap: 7px;
+        padding-inline: 7px 0;
+        padding-block: 2px;
+        border: none;
+        background: #eeeeee;
+        font-size: 0.8rem;
+        transition: 0.2s;
+    }
+
+    option:first-of-type {
+        border-radius: 6px 6px 0 0;
+    }
+
+    option:last-of-type {
+        border-radius: 0 0 6px 6px;
+    }
+
+    option:not(:last-of-type) {
+        border-bottom: 1px solid #ddd;
+    }
+
+    option:nth-of-type(odd) {
+        background: white;
+    }
+
+    option:hover,
+    option:focus {
+        background: plum;
+        outline: none;
+    }
+
+    option:checked {
+        background: #e0b0ff;
+        font-weight: bold;
+    }
+}
+
+.p-color {
+    appearance: none;
+    -webkit-appearance: none;
+    border: none;
+    background: #fff;
+    cursor: pointer;
+    width: 30px;
+    height: 26px;
+    padding: 0px;
+    border-radius: 10px;
+    transition: 0.4s;
+    flex-shrink: 0;
+
+    &:hover,
+    &:focus {
+        background: #dddddd;
+        outline: none;
+    }
+
+    &::-webkit-color-swatch-wrapper {
+        padding: 0;
+    }
+
+    &::-webkit-color-swatch {
+        border: none;
+        padding: 0;
+        border-radius: 8px;
+    }
+
+    &::-moz-color-swatch {
+        border: none;
+        border-radius: 8px;
+    }
+}
+
+.delete-btn {
+    background: #ff7675;
+    color: white;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 10px 15px;
+    border-radius: 8px;
+}
+
+.delete-btn:hover {
+    background: #d63031;
+}
+
+.btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+.add-btn {
+    background-position: center top;
+    background: linear-gradient(180deg, rgba(112, 8, 231, 1) 0%, rgba(112, 8, 231, 1) 40%, rgba(200, 0, 222, 1) 60%, rgba(200, 0, 222, 1) 100%);
+    color: #fff;
+    transition: background-position 1s ease;
+    background-size: 100% 400%;
+
+    &:hover {
+        background-position: center bottom;
+    }
+}
+
+.start-btn {
+    background-position: left bottom;
+    background: linear-gradient(90deg, rgba(142, 81, 255, 1) 0%, rgba(142, 81, 255, 1) 40%, rgba(79, 57, 246, 1) 60%, rgba(79, 57, 246, 1) 100%);
+    color: #fff;
+    font-size: 16px;
+    margin-top: 20px;
+    transition: background-position 1s ease;
+    background-size: 400% 100%;
+
+    &:hover {
+        background-position: right bottom;
+    }
+}

@@ -19,12 +19,12 @@ export class MainMenu extends Scene {
 
         this.input.once('pointerdown', () => {
 
-            this.scene.start('Game');
+            this.scene.start('CharacterSelect');
 
         });
 
         this.input.keyboard!.on('keydown-SPACE', () => {
-            this.scene.start('Game');
+            this.scene.start('CharacterSelect');
         });
     }
 }

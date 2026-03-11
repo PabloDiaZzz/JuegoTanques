@@ -10,13 +10,25 @@ export default class PlayerManager {
         this.scene = scene;
     }
 
-    public createPlayers(): Tank[] {
+    public createPlayers(configs?: any[]): Tank[] {
         const players: Tank[] = [];
 
-        players.push(new Player(this.scene, 200, 0xff0000, 'Jugador Rojo'));
-        players.push(new CPU(this.scene, 900, 0x00ff00, 'CPU Verde'));
-        // players.push(new Tank(this.scene, 1200, 0x0000ff, 'Jugador Azul'));
-        // players.push(new Tank(this.scene, 1500, 0x000000, 'Jugador Negro'));
+        const finalConfigs = configs || [
+            { name: 'CPU Rojo', level: 1, x: 200, color: 0xff0000 },
+            { name: 'CPU Verde', level: 2, x: 900, color: 0x00ff00 },
+            { name: 'CPU Azul', level: 3, x: 1200, color: 0x0000ff },
+            { name: 'CPU Negro', level: 2, x: 1500, color: 0x000000 }
+        ];
+
+        finalConfigs.forEach(config => {
+            if (config.level === 0) {
+                players.push(new Player(this.scene, config.x, config.color, config.name));
+            } else {
+                const cpu = new CPU(this.scene, config.x, config.color, config.name);
+                cpu.level = config.level;
+                players.push(cpu);
+            }
+        });
 
         return players;
     }

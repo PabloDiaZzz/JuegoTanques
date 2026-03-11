@@ -33,11 +33,14 @@ export class Preloader extends Scene {
 
         this.load.bitmapFont('miFuente', 'miFuente.png', 'miFuente.xml');
 
-        this.load.image('tank_body', 'Tanks/tank_model_1_1_b.png');
-        this.load.image('tank_barrel', 'Tanks/tank_model_1_6_w1.png');
-        this.load.audio('shoot', 'Tanks/heavy_canon.ogg');
+        this.load.image('tank_body', 'tanks/tank_model_1_1_b.png');
+        this.load.image('tank_barrel', 'tanks/tank_model_1_6_w1.png');
+        this.load.audio('shoot', 'tanks/heavy_canon.ogg');
 
-        this.load.audio('bgMusic', 'music/');
+        // this.load.audio('bgMusic', 'music/');
+
+        this.load.html('characterSelect', 'characterSelect.html');
+        this.load.css('characterSelectCss', 'characterSelect.css');
     }
 
     create() {

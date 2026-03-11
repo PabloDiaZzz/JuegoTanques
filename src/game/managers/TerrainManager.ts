@@ -4,9 +4,9 @@ import { interpolate } from '../utils/AuxMethods';
 
 export default class TerrainManager {
     public terrainPoints: { x: number, y: number }[] = [];
+    public terrainVisual!: Phaser.GameObjects.Graphics;
 
     private scene: GameScene;
-    private terrainVisual!: Phaser.GameObjects.Graphics;
     private terrainBodies: MatterJS.BodyType[] = [];
     private terrainSteps: number = 5;
 
@@ -14,79 +14,79 @@ export default class TerrainManager {
         this.scene = scene;
     }
 
-    public createTerrain(): MatterJS.BodyType[] {
-        const width = this.scene.scale.width * 2;
-        const groundLevel = 600;
-        const amplitude = 200;
-        const slopeLengthRange = [200, 450];
+    public createTerrain(existingPoints?: { x: number, y: number }[]): MatterJS.BodyType[] {
+        if (existingPoints) {
+            this.terrainPoints = existingPoints.map(p => ({ ...p }));
+        } else {
+                const width = this.scene.scale.width * 2;
+                const groundLevel = 600;
+                const amplitude = 200;
+                const slopeLengthRange = [200, 450];
 
-        const points = [];
-        let currentX = 0;
-        let slopeStartHeight = Math.random();
-        let slopeEndHeight = Math.random();
-        let slopeStart = 0;
-        let currentSlopeLength = Phaser.Math.Between(slopeLengthRange[0], slopeLengthRange[1]);
-        let slopeEnd = currentSlopeLength;
+                const points = [];
+                let currentX = 0;
+                let slopeStartHeight = Math.random();
+                let slopeEndHeight = Math.random();
+                let slopeStart = 0;
+                let currentSlopeLength = Phaser.Math.Between(slopeLengthRange[0], slopeLengthRange[1]);
+                let slopeEnd = currentSlopeLength;
 
-        while (currentX <= width + 40) {
-            if (currentX >= slopeEnd) {
-                slopeStartHeight = slopeEndHeight;
-                slopeEndHeight = Math.random();
-                slopeStart = currentX;
-                currentSlopeLength = Phaser.Math.Between(slopeLengthRange[0], slopeLengthRange[1]);
-                slopeEnd += currentSlopeLength;
+                while (currentX <= width + 40) {
+                    if (currentX >= slopeEnd) {
+                        slopeStartHeight = slopeEndHeight;
+                        slopeEndHeight = Math.random();
+                        slopeStart = currentX;
+                        currentSlopeLength = Phaser.Math.Between(slopeLengthRange[0], slopeLengthRange[1]);
+                        slopeEnd += currentSlopeLength;
+                    }
+                    const delta = (currentX - slopeStart) / (slopeEnd - slopeStart);
+                    const y = groundLevel + interpolate(slopeStartHeight, slopeEndHeight, delta) * amplitude;
+
+                    points.push({ x: currentX, y: y });
+                    currentX += this.terrainSteps;
+                }
+                this.terrainPoints = points;
             }
-            const delta = (currentX - slopeStart) / (slopeEnd - slopeStart);
-            const y = groundLevel + interpolate(slopeStartHeight, slopeEndHeight, delta) * amplitude;
+            this.terrainVisual = this.scene.add.graphics();
+            this.updateTerrainPhysicsAndVisuals();
 
-            points.push({ x: currentX, y: y });
-            currentX += this.terrainSteps;
+            return this.terrainBodies;
         }
-        this.terrainVisual = this.scene.add.graphics();
-        this.terrainPoints = points;
-        this.updateTerrainPhysicsAndVisuals();
-
-        return this.terrainBodies;
-    }
 
     public createCrater(impactX: number, impactY: number, radius: number = 70, depthFactor: number = 0.7): void {
         let changed = false;
 
-        // 1. Obtenemos el ángulo del terreno en el punto de impacto
         const angle = this.getAngleAtX(impactX);
         const cosA = Math.cos(angle);
         const sinA = Math.sin(angle);
 
-        // Definimos los radios de nuestra elipse (ancho vs profundidad)
-        const R = radius;
-        const r = radius * depthFactor;
+        const horizontalRadius = radius;
+        const depthRadius = radius * depthFactor;
 
-        // 2. Coeficientes de la ecuación de la elipse rotada (para evitar divisiones por cero)
-        const A_coeff = (Math.pow(sinA, 2) / Math.pow(R, 2)) + (Math.pow(cosA, 2) / Math.pow(r, 2));
-        const B_factor = 2 * sinA * cosA * ((1 / Math.pow(R, 2)) - (1 / Math.pow(r, 2)));
-        const C_base = (Math.pow(cosA, 2) / Math.pow(R, 2)) + (Math.pow(sinA, 2) / Math.pow(r, 2));
+        // Coeficientes para hacer un elipse
+        const a_coeff = (Math.pow(sinA, 2) / Math.pow(horizontalRadius, 2)) + (Math.pow(cosA, 2) / Math.pow(depthRadius, 2));
+        const b_factor = 2 * sinA * cosA * ((1 / Math.pow(horizontalRadius, 2)) - (1 / Math.pow(depthRadius, 2)));
+        const c_base = (Math.pow(cosA, 2) / Math.pow(horizontalRadius, 2)) + (Math.pow(sinA, 2) / Math.pow(depthRadius, 2));
 
         for (let i = 0; i < this.terrainPoints.length; i++) {
             const p = this.terrainPoints[i];
             const dx = p.x - impactX;
 
-            // Optimización: Si el punto está muy lejos horizontalmente, lo ignoramos
+            // Solo procesamos los puntos cercanos al impacto
             if (Math.abs(dx) > radius * 1.5) continue;
 
-            // 3. Resolvemos la ecuación cuadrática para encontrar la profundidad (Y) en este punto X
             // Ecuación: A*y² + B*y + C = 1 (donde y es relativo al impacto)
-            const k2 = dx * B_factor;
-            const k3 = Math.pow(dx, 2) * C_base - 1;
+            const k2 = dx * b_factor;
+            const k3 = Math.pow(dx, 2) * c_base - 1;
 
-            // Calculamos el discriminante
-            const discriminant = Math.pow(k2, 2) - 4 * A_coeff * k3;
+            const discriminant = Math.pow(k2, 2) - 4 * a_coeff * k3;
 
+            // Si es positivo el punto esta dentro de la elipse
             if (discriminant >= 0) {
-                // Buscamos la solución positiva (hacia abajo)
-                const relativeY = (-k2 + Math.sqrt(discriminant)) / (2 * A_coeff);
+                // Elegimos la solucion positiva porque +y = +profundidad
+                const relativeY = (-k2 + Math.sqrt(discriminant)) / (2 * a_coeff);
                 const targetY = impactY + relativeY;
 
-                // Si el nuevo punto "hunde" el terreno, lo aplicamos
                 if (targetY > p.y) {
                     p.y = targetY;
                     changed = true;

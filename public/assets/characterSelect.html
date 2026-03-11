@@ -1,0 +1,37 @@
+<link rel="stylesheet" href="characterSelect.css">
+
+<div class="menu-container">
+    <h2>CONFIGURAR JUGADORES</h2>
+
+    <div id="player-list">
+    </div>
+
+    <button id="add-player-btn" class="btn add-btn">+ AÑADIR JUGADOR</button>
+    <button id="start-btn" class="btn start-btn">¡COMENZAR BATALLA!</button>
+</div>
+
+<template id="player-row-template">
+    <div class="player-row">
+        <div class="reorder-controls">
+            <button class="move-up" title="Subir">▲</button>
+            <button class="move-down" title="Bajar">▼</button>
+        </div>
+
+        <input type="text" class="p-name" value="Tanque">
+
+        <select class="p-type">
+            <button>
+                <selectedcontent></selectedcontent>
+            </button>
+            <option value="0">Humano</option>
+            <option value="1">CPU (Fácil)</option>
+            <option value="2" selected>CPU (Normal)</option>
+            <option value="3">CPU (Imposible)</option>
+            <option value="random">CPU (Aleatorio)</option>
+        </select>
+
+        <input type="color" class="p-color" value="#ffffff">
+
+        <button class="delete-btn" title="Borrar Jugador">X</button>
+    </div>
+</template>

@@ -3,6 +3,8 @@ import { Game as MainGame } from './scenes/Game';
 import { GameOver } from './scenes/GameOver';
 import { MainMenu } from './scenes/MainMenu';
 import { Preloader } from './scenes/Preloader';
+import { PauseMenu } from './scenes/PauseMenu';
+import { CharacterSelect } from './scenes/CharacterSelect';
 import { AUTO, Game } from 'phaser';
 import Phaser from 'phaser';
 
@@ -11,6 +13,9 @@ const config = {
     width: screen.availWidth,
     height: screen.availHeight,
     parent: 'game-container',
+    dom: {
+        createContainer: true
+    },
     backgroundColor: '#028af8',
     render: {
         antialias: true,
@@ -35,8 +40,10 @@ const config = {
         Boot,
         Preloader,
         MainMenu,
+        CharacterSelect,
         MainGame,
-        GameOver
+        GameOver,
+        PauseMenu
     ]
 };
 

@@ -16,12 +16,14 @@ export class Game extends Scene {
     public players: Tank[] = [];
     public projectiles: Projectile[] = [];
     public terrainBody!: MatterJS.BodyType[];
+    public cleanTerrainPoints: { x: number, y: number }[] | null = null;
     public terrainManager!: TerrainManager;
     public turnManager!: TurnManager;
     public shoot!: Phaser.Sound.BaseSound;
     public turnTimer!: Timer;
     public lastImpacts: Map<string, Phaser.Math.Vector2> = new Map();
     public lastGlobalImpact: Phaser.Math.Vector2 | null = null;
+    public playerConfigs: any[] | null = null;
     private textoTurno!: Phaser.GameObjects.BitmapText;
     private inputManager!: InputManager;
     private playerManager!: PlayerManager;
@@ -29,6 +31,20 @@ export class Game extends Scene {
 
     constructor() {
         super('Game');
+    }
+
+    init(data: any) {
+        if (data && data.initialTerrain) {
+            this.cleanTerrainPoints = data.initialTerrain;
+        } else {
+            this.cleanTerrainPoints = null;
+        }
+
+        if (data && data.players) {
+            this.playerConfigs = data.players;
+        } else {
+            this.playerConfigs = null;
+        }
     }
 
     create() {
@@ -40,8 +56,8 @@ export class Game extends Scene {
         this.cameras.main.setZoom(0.7);
         this.cameras.main.centerOn(this.scale.width / 2, this.scale.height / 2);
         this.cameras.main.setBounds(0, 0, this.scale.width, this.scale.height);
-        this.terrainBody = this.terrainManager.createTerrain();
-        this.players = this.playerManager.createPlayers();
+        this.terrainManager.createTerrain(this.cleanTerrainPoints || undefined);
+        this.players = this.playerManager.createPlayers(this.playerConfigs || undefined);
         this.turnManager = new TurnManager(this, this.players);
         this.textoTurno = this.add.bitmapText(10, 10, 'miFuente', 'Turno: ' + this.turnManager.getCurrentPlayer().body.label, 20);
         this.powerSlider = new Slider(this, 50, 80, 200, 150, (value) => {
@@ -54,6 +70,12 @@ export class Game extends Scene {
 
         new Button(this, 0x888888, 1600, 35, 150, 50, 'Saltar Turno', () => {
             this.switchTurn();
+        if (!this.cleanTerrainPoints) {
+            this.cleanTerrainPoints = this.terrainManager.terrainPoints.map(p => ({ ...p }));
+        }
+        this.input.keyboard!.on('keydown-ESC', () => {
+            this.scene.pause();
+            this.scene.launch('PauseMenu');
         });
 
         this.turnTimer = new Timer(this, this.scale.width / 2, -120, 80, 50, 20, () => this.switchTurn());
