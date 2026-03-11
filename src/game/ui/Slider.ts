@@ -3,8 +3,8 @@ import { Game as GameScene } from '../scenes/Game';
 
 export default class Slider {
     private scene: GameScene;
-    private handle: Phaser.GameObjects.Arc;
-    private track: Phaser.GameObjects.Rectangle;
+    public handle: Phaser.GameObjects.Arc;
+    public track: Phaser.GameObjects.Rectangle;
     private height: number = 200;
     private limit: number = 100;
 
@@ -14,7 +14,8 @@ export default class Slider {
         this.limit = limit;
         this.track = scene.add.rectangle(x, y, 10, this.height, 0x333333).setOrigin(0.5, 0);
         this.handle = scene.add.circle(x, y, 15, 0xffffff).setInteractive({ draggable: true });
-
+        this.handle.setScrollFactor(0);
+        this.track.setScrollFactor(0);
         this.setupEvents(y, onUpdate);
     }
 

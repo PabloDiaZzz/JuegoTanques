@@ -2,9 +2,10 @@ import Phaser from 'phaser';
 import { Game as GameScene } from '../scenes/Game';
 
 export default class Timer {
+    public bg!: Phaser.GameObjects.Rectangle;
+    public timeText!: Phaser.GameObjects.BitmapText;
+    
     private scene: GameScene;
-    private bg!: Phaser.GameObjects.Rectangle;
-    private timeText!: Phaser.GameObjects.BitmapText;
     private time: number;
     private originalTime: number;
     private timeout: () => void;

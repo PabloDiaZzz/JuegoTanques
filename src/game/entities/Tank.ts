@@ -14,6 +14,7 @@ export default class Tank {
     public readonly maxFuel: number = 150;
     public fuelbar!: Phaser.GameObjects.Rectangle;
     public fuelbarOWidth!: number;
+    public trajectoryGraphics!: Phaser.GameObjects.Graphics;
 
     protected fuelCost: number = 0.4;
     protected rotating: boolean = false;
@@ -25,7 +26,6 @@ export default class Tank {
     protected currentBarrelRotation: number;
     protected friction: number = 0.5;
     protected targetAngle: number = 0;
-    protected trajectoryGraphics!: Phaser.GameObjects.Graphics;
     protected showTrajectory: boolean = true;
     protected legitTrajectory: boolean = true;
     protected defaultYCenter: number = 0;
@@ -51,7 +51,7 @@ export default class Tank {
         this.trajectoryGraphics = this.scene.add.graphics();
         this.container = this.scene.add.container(x, y);
         this.rect = this.scene.add.rectangle(0, 0, 80, 50, color, 0.8);
-        this.rect.setOrigin(0.5, 0.9);
+        this.rect.setOrigin(0.5, 0.9).setVisible(false);
         const bodySprite = this.scene.add.image(0, 0, 'tank_body').setDisplaySize(80, 50);
         bodySprite.setOrigin(0.5, 0.7);
         bodySprite.setTint(color);
