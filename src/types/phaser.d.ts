@@ -10,7 +10,7 @@ declare global {
         game: Phaser.Game;
     }
 
-    interface ProjectileVisual extends Phaser.GameObjects.Arc, Phaser.Physics.Matter.Components.Velocity {
+    interface ProjectileVisual extends Phaser.GameObjects.Arc, Phaser.Physics.Matter.Sprite, Phaser.Physics.Matter.Components.Velocity {
         unit?: Projectile;
     }
 }

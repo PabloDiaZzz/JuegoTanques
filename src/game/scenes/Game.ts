@@ -61,7 +61,6 @@ export class Game extends Scene {
         this.terrainManager.createTerrain(this.cleanTerrainPoints || undefined);
         this.players = this.playerManager.createPlayers(this.playerConfigs || undefined);
         this.turnManager = new TurnManager(this, this.players);
-        this.setupCollisions();
 
         if (!this.cleanTerrainPoints) {
             this.cleanTerrainPoints = this.terrainManager.terrainPoints.map(p => ({ ...p }));
@@ -120,41 +119,6 @@ export class Game extends Scene {
         this.projectiles.push(projectile);
         this.focusCameraOnTarget(projectile.visual);
         this.uiCamera.ignore(projectile.visual)
-    }
-
-    private setupCollisions() {
-        this.matter.world.on('collisionstart', (event: any) => {
-            event.pairs.forEach((pair: any) => {
-                this.handleProjectileCollision(pair);
-            });
-        });
-    }
-
-    private handleProjectileCollision(pair: any) {
-        const { bodyA, bodyB } = pair;
-
-        if (bodyA.label === 'bullet' || bodyB.label === 'bullet') {
-            const bulletBody = bodyA.label === 'bullet' ? bodyA : bodyB as MatterJS.BodyType;
-            const targetBody = bodyA.label === 'bullet' ? bodyB : bodyA as TankBody;
-            const impactPos = new Phaser.Math.Vector2(bulletBody.position.x, bulletBody.position.y);
-            this.lastGlobalImpact = impactPos;
-
-            const projectileInstance: Projectile | null = bulletBody.gameObject ? bulletBody.gameObject.unit : null;
-            if (projectileInstance && projectileInstance.owner) {
-                this.lastImpacts.set(projectileInstance.owner.body.label, impactPos);
-            }
-            if (targetBody.unit && typeof targetBody.unit.takeDamage === 'function') {
-                const tank: Tank = targetBody.unit;
-                tank.takeDamage(25);
-            } else if (targetBody.label == 'ground') {
-                this.terrainManager.createCrater(bulletBody.position.x, bulletBody.position.y, 70);
-            }
-
-            if (projectileInstance && !projectileInstance.turnSwitched) {
-                projectileInstance.safeSwitchTurn();
-            }
-            this.cameras.main.shake(100, 0.01);
-        }
     }
 
     public updateUIVisibility(): void {

@@ -249,7 +249,7 @@ export default class Tank {
         const targetVy = Math.sin(angle) * speed * dFactor;
         const forceMult = 0.005 * this.body.mass * timeCorrection;
         const forceX = (targetVx - this.body.velocity.x) * forceMult;
-        const forceY = (targetVy - this.body.velocity.y) * forceMult * 0.5;
+        const forceY = (targetVy - this.body.velocity.y) * forceMult * 0.75;
 
         this.scene.matter.applyForce(this.body, { x: forceX, y: forceY });
         const backOffset = direction === 'left' ? 20 : -20;
