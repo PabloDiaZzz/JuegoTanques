@@ -24,12 +24,12 @@ export class Game extends Scene {
     public lastImpacts: Map<string, Phaser.Math.Vector2> = new Map();
     public lastGlobalImpact: Phaser.Math.Vector2 | null = null;
     public playerConfigs: any[] | null = null;
+    public uiCamera!: Phaser.Cameras.Scene2D.Camera;
     private textoTurno!: Phaser.GameObjects.BitmapText;
     private inputManager!: InputManager;
     private playerManager!: PlayerManager;
     private powerSlider!: Slider;
     private uiElements: Phaser.GameObjects.GameObject[] = []
-    private uiCamera!: Phaser.Cameras.Scene2D.Camera;
 
     constructor() {
         super('Game');

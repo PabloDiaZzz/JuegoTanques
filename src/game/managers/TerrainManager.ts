@@ -12,46 +12,57 @@ export default class TerrainManager {
 
     constructor(scene: GameScene) {
         this.scene = scene;
+        this.initTextures();
+    }
+
+    initTextures() {
+        if (!this.scene.textures.exists('pixel')) {
+            const graphics = new Phaser.GameObjects.Graphics(this.scene);
+            graphics.fillStyle(0xffffff, 1);
+            graphics.fillRect(0, 0, 4, 4);
+            graphics.generateTexture('pixel', 4, 4);
+            graphics.destroy();
+        }
     }
 
     public createTerrain(existingPoints?: { x: number, y: number }[]): MatterJS.BodyType[] {
         if (existingPoints) {
             this.terrainPoints = existingPoints.map(p => ({ ...p }));
         } else {
-                const width = this.scene.scale.width * 2;
-                const groundLevel = 600;
-                const amplitude = 200;
-                const slopeLengthRange = [200, 450];
+            const width = this.scene.scale.width * 2;
+            const groundLevel = 600;
+            const amplitude = 200;
+            const slopeLengthRange = [200, 450];
 
-                const points = [];
-                let currentX = 0;
-                let slopeStartHeight = Math.random();
-                let slopeEndHeight = Math.random();
-                let slopeStart = 0;
-                let currentSlopeLength = Phaser.Math.Between(slopeLengthRange[0], slopeLengthRange[1]);
-                let slopeEnd = currentSlopeLength;
+            const points = [];
+            let currentX = 0;
+            let slopeStartHeight = Math.random();
+            let slopeEndHeight = Math.random();
+            let slopeStart = 0;
+            let currentSlopeLength = Phaser.Math.Between(slopeLengthRange[0], slopeLengthRange[1]);
+            let slopeEnd = currentSlopeLength;
 
-                while (currentX <= width + 40) {
-                    if (currentX >= slopeEnd) {
-                        slopeStartHeight = slopeEndHeight;
-                        slopeEndHeight = Math.random();
-                        slopeStart = currentX;
-                        currentSlopeLength = Phaser.Math.Between(slopeLengthRange[0], slopeLengthRange[1]);
-                        slopeEnd += currentSlopeLength;
-                    }
-                    const delta = (currentX - slopeStart) / (slopeEnd - slopeStart);
-                    const y = groundLevel + interpolate(slopeStartHeight, slopeEndHeight, delta) * amplitude;
-
-                    points.push({ x: currentX, y: y });
-                    currentX += this.terrainSteps;
+            while (currentX <= width + 40) {
+                if (currentX >= slopeEnd) {
+                    slopeStartHeight = slopeEndHeight;
+                    slopeEndHeight = Math.random();
+                    slopeStart = currentX;
+                    currentSlopeLength = Phaser.Math.Between(slopeLengthRange[0], slopeLengthRange[1]);
+                    slopeEnd += currentSlopeLength;
                 }
-                this.terrainPoints = points;
-            }
-            this.terrainVisual = this.scene.add.graphics();
-            this.updateTerrainPhysicsAndVisuals();
+                const delta = (currentX - slopeStart) / (slopeEnd - slopeStart);
+                const y = groundLevel + interpolate(slopeStartHeight, slopeEndHeight, delta) * amplitude;
 
-            return this.terrainBodies;
+                points.push({ x: currentX, y: y });
+                currentX += this.terrainSteps;
+            }
+            this.terrainPoints = points;
         }
+        this.terrainVisual = this.scene.add.graphics();
+        this.updateTerrainPhysicsAndVisuals();
+
+        return this.terrainBodies;
+    }
 
     public createCrater(impactX: number, impactY: number, radius: number = 70, depthFactor: number = 0.7): void {
         let changed = false;
@@ -185,5 +196,26 @@ export default class TerrainManager {
         }
 
         return totalDistance;
+    }
+
+    public emitExplosionParticles(x: number, y: number, angle: number) {
+        const emitter = this.scene.add.particles(x, y, 'pixel', {
+            speed: { min: 30, max: 200 },
+            angle: { min: angle - 130, max: angle - 50 },
+            gravityY: 600,
+            scale: { start: 2, end: 0 },
+            alpha: { start: 1, end: 0 },
+            lifespan: 1000,
+            tint: [0x5d4037, 0x8d6e63, 0x3e2723],
+            emitting: false
+        });
+
+        this.scene.uiCamera.ignore(emitter);
+
+        emitter.explode(20);
+
+        this.scene.time.delayedCall(1000, () => {
+            emitter.destroy();
+        });
     }
 }

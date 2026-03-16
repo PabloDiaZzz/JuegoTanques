@@ -87,11 +87,13 @@ export default class Projectile {
         const hitX = this.visual.x;
         const hitY = this.visual.y;
         const impactPos = new Phaser.Math.Vector2(hitX, hitY);
+        const angle = this.scene.terrainManager.getAngleAtX(hitX);
         this.scene.lastGlobalImpact = impactPos;
         this.scene.lastImpacts.set(this.owner.body.label, impactPos);
 
         if (mainBody.label === 'ground') {
             this.scene.terrainManager.createCrater(hitX, hitY, 70);
+            this.scene.terrainManager.emitExplosionParticles(hitX, hitY, angle);
         } else if (mainBody && (mainBody as TankBody).unit instanceof Tank) {
             const tank = (mainBody as TankBody).unit as Tank;
             tank.takeDamage(25);
