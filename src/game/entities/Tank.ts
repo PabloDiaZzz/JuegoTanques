@@ -269,7 +269,33 @@ export default class Tank {
         if (this.health <= 0) this.health = 0;
         this.healthBar.width = this.health / 2;
         this.hpText.setText(this.health.toString());
+        this.showDamagePopup(amount);
         if (this.health === 0) this.destroy();
+    }
+
+    showDamagePopup(amount: number) {
+        const popup = this.scene.add.text(this.container.x, this.container.y - 50, `-${amount}`, {
+            fontSize: '24px',
+            fontStyle: 'bold',
+            color: '#ff0000',
+            stroke: '#000000',
+            strokeThickness: 2
+        });
+
+        popup.setOrigin(0.5);
+
+        this.scene.uiCamera.ignore(popup);
+
+        this.scene.tweens.add({
+            targets: popup,
+            y: popup.y - 60,
+            alpha: 0,
+            duration: 1000,
+            ease: 'Cubic.easeOut',
+            onComplete: () => {
+                popup.destroy();
+            }
+        });
     }
 
     destroy(): void {
