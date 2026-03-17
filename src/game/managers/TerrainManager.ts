@@ -199,7 +199,9 @@ export default class TerrainManager {
     }
 
     public emitExplosionParticles(x: number, y: number, angle: number) {
-        const emitter = this.scene.add.particles(x, y, 'pixel', {
+        const emitter = this.scene.add.particles(0, 0, 'pixel', {
+            x: { min: x - 30, max: x + 30 },
+            y: { min: y - 10, max: y + 30 },
             speed: { min: 30, max: 200 },
             angle: { min: angle - 130, max: angle - 50 },
             gravityY: 600,
