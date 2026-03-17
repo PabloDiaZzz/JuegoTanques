@@ -30,6 +30,8 @@ export class Game extends Scene {
     private playerManager!: PlayerManager;
     private powerSlider!: Slider;
     private uiElements: Phaser.GameObjects.GameObject[] = []
+    private cameraFollowPoint = new Phaser.Math.Vector2();
+    private cameraTarget: any = null;
 
     constructor() {
         super('Game');
@@ -57,7 +59,8 @@ export class Game extends Scene {
         this.shoot = this.sound.add('shoot').setVolume(0.3);
         this.cameras.main.setZoom(0.5);
         this.cameras.main.centerOn(this.scale.width / 2, this.scale.height / 2);
-        this.cameras.main.setBounds(0, 0, this.scale.width * 2, this.scale.height);
+        this.cameras.main.setBounds(0, - 800, this.scale.width * 2, this.scale.height + 1600);
+        this.cameraFollowPoint.y = this.terrainManager.groundLevel;
         this.terrainManager.createTerrain(this.cleanTerrainPoints || undefined);
         this.players = this.playerManager.createPlayers(this.playerConfigs || undefined);
         this.turnManager = new TurnManager(this, this.players);
@@ -87,6 +90,29 @@ export class Game extends Scene {
     mark = (...args: any[]) => markPoint(this, ...args);
 
     update(time: number, delta: number) {
+        if (this.cameraTarget && this.cameraTarget.active) {
+            this.cameraFollowPoint.x = this.cameraTarget.x;
+            const zoom = this.cameras.main.zoom;
+            if ((this.cameraTarget as any).unit instanceof Projectile) {
+                const mitadVista = (this.scale.height / zoom) / 2;
+                const margenSuperior = 300;
+                const topeSuperior = this.terrainManager.groundLevel - mitadVista + margenSuperior;
+
+                if (this.cameraTarget.y > topeSuperior) {
+                    this.cameraFollowPoint.y = this.terrainManager.groundLevel;
+                } else {
+                    this.cameraFollowPoint.y = Phaser.Math.Clamp(
+                        this.cameraTarget.y + mitadVista - margenSuperior,
+                        -Infinity,
+                        this.terrainManager.groundLevel
+                    );
+                }
+            } else {
+                this.cameraFollowPoint.y = this.terrainManager.groundLevel;
+            }
+        }
+
+
         if (this.turnManager.getPlayerCount() === 1) {
             this.scene.start('GameOver', { type: 'win', winner: this.players[0].body.label, color: this.players[0].bodyColor });
         }
@@ -101,7 +127,8 @@ export class Game extends Scene {
     }
 
     public focusCameraOnTarget(target: Phaser.GameObjects.Container | Phaser.GameObjects.GameObject) {
-        this.cameras.main.startFollow(target, true, 0.1, 0.1);
+        this.cameraTarget = target;
+        this.cameras.main.startFollow(this.cameraFollowPoint, true, 0.1, 0.1);
     }
 
     switchTurn() {

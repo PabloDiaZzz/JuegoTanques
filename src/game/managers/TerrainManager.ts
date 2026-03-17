@@ -5,6 +5,7 @@ import { interpolate } from '../utils/AuxMethods';
 export default class TerrainManager {
     public terrainPoints: { x: number, y: number }[] = [];
     public terrainVisual!: Phaser.GameObjects.Graphics;
+    public groundLevel: number = 600;
 
     private scene: GameScene;
     private terrainBodies: MatterJS.BodyType[] = [];
@@ -30,7 +31,6 @@ export default class TerrainManager {
             this.terrainPoints = existingPoints.map(p => ({ ...p }));
         } else {
             const width = this.scene.scale.width * 2;
-            const groundLevel = 600;
             const amplitude = 200;
             const slopeLengthRange = [200, 450];
 
@@ -51,7 +51,7 @@ export default class TerrainManager {
                     slopeEnd += currentSlopeLength;
                 }
                 const delta = (currentX - slopeStart) / (slopeEnd - slopeStart);
-                const y = groundLevel + interpolate(slopeStartHeight, slopeEndHeight, delta) * amplitude;
+                const y = this.groundLevel + interpolate(slopeStartHeight, slopeEndHeight, delta) * amplitude;
 
                 points.push({ x: currentX, y: y });
                 currentX += this.terrainSteps;
