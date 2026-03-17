@@ -11,10 +11,11 @@ export default class Projectile {
     private lastX: number = 0;
     private lastY: number = 0;
     private framesAlive: number = 0;
+    private trail: Phaser.GameObjects.Particles.ParticleEmitter;
 
     constructor(scene: GameScene, x: number, y: number, angle: number, power: number, owner: Tank) {
         this.scene = scene;
-        this.visual = scene.add.circle(x, y, 5, 0xffff00) as ProjectileVisual;
+        this.visual = scene.add.circle(x, y, 5, 0x222222) as ProjectileVisual;
         this.owner = owner;
 
         scene.matter.add.gameObject(this.visual, {
@@ -32,6 +33,21 @@ export default class Projectile {
         const velocityX = Math.cos(angle) * (power / 5);
         const velocityY = Math.sin(angle) * (power / 5);
         this.visual.setVelocity(velocityX, velocityY);
+
+        this.trail = scene.add.particles(0, 0, 'pixel', {
+            follow: this.visual,
+            scale: { start: 3, end: 0 },
+            alpha: { start: 0.8, end: 0 },
+            lifespan: 300,
+            tint: 0x777777,
+            frequency: 10,
+            speed: { min: 20, max: 50 },
+            angle: { min: 0, max: 360 }
+        });
+
+        this.trail.setDepth(20);
+
+        this.scene.uiCamera.ignore(this.trail);
 
         scene.time.addEvent({
             delay: 10000,
@@ -111,6 +127,13 @@ export default class Projectile {
     }
 
     destroy() {
+        if (this.trail) {
+            this.trail.stop();
+            this.scene.time.delayedCall(300, () => {
+                if (this.trail) this.trail.destroy();
+            });
+        }
+
         if (this.visual && this.visual.active) {
             this.visual.destroy();
         }
