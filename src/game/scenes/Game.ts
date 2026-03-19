@@ -29,6 +29,7 @@ export class Game extends Scene {
     private inputManager!: InputManager;
     private playerManager!: PlayerManager;
     private powerSlider!: Slider;
+    private shieldBtn!: Button;
     private uiElements: Phaser.GameObjects.GameObject[] = []
     private cameraFollowPoint = new Phaser.Math.Vector2();
     private cameraTarget: any = null;
@@ -151,6 +152,7 @@ export class Game extends Scene {
     public updateUIVisibility(): void {
         const isHuman = this.currentTurn instanceof Player;
         this.powerSlider.setVisible(isHuman);
+        this.shieldBtn.setVisible(isHuman);
     }
 
     private setupUI() {
@@ -209,6 +211,12 @@ export class Game extends Scene {
         this.powerSlider.setValue(this.currentTurn.power);
         this.uiElements.push(this.powerSlider.handle, this.powerSlider.track);
 
+        // BOTÓN ESCUDO
+        this.shieldBtn = new Button(this, 0x222288, uiLeft + 10, uiTop + 15, 80, 30, 'ESCUDO', () => {
+            this.currentTurn.shieldMode = true;
+        });
+        this.uiElements.push(this.shieldBtn.container);
+
         // TIMER
         this.turnTimer = new Timer(this, this.scale.width / 2, 40, 80, 50, 20, () => {
             this.currentTurn.canShoot = false;
@@ -220,7 +228,7 @@ export class Game extends Scene {
         this.uiElements.push(this.turnTimer.bg, this.turnTimer.timeText);
 
         // TEXTO TURNO
-        this.textoTurno = this.add.bitmapText(20, 20, 'miFuente', 'Turno: ' + this.turnManager.getCurrentPlayer().body.label, 15).setScrollFactor(0);
+        this.textoTurno = this.add.bitmapText(20, 10, 'miFuente', 'Turno: ' + this.turnManager.getCurrentPlayer().body.label, 15).setScrollFactor(0);
         this.uiElements.push(this.textoTurno)
 
         this.cameras.main.ignore(this.uiElements);

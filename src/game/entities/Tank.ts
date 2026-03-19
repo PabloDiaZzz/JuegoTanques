@@ -15,6 +15,7 @@ export default class Tank {
     public fuelbar!: Phaser.GameObjects.Rectangle;
     public fuelbarOWidth!: number;
     public trajectoryGraphics!: Phaser.GameObjects.Graphics;
+    public shieldMode: boolean = false;
 
     protected fuelCost: number = 0.4;
     protected rotating: boolean = false;
@@ -89,6 +90,12 @@ export default class Tank {
     }
 
     update(delta: number): void {
+        if (this.shieldMode && this.scene.currentTurn == this) {
+            this.healthBar.fillColor = 0x0000bb;
+            this.scene.switchTurn();
+        } else if (this.scene.currentTurn == this) {
+            this.healthBar.fillColor = 0x00ff00;
+        }
         this.container.x = this.body.position.x;
         this.container.y = this.body.position.y;
         this.container.rotation = this.body.angle;
@@ -265,11 +272,12 @@ export default class Tank {
     }
 
     takeDamage(amount: number): void {
-        this.health -= amount;
+        const damage = this.shieldMode ? amount * 0.25 : amount;
+        this.health -= damage;
         if (this.health <= 0) this.health = 0;
         this.healthBar.width = this.health / 2;
         this.hpText.setText(this.health.toString());
-        this.showDamagePopup(amount);
+        this.showDamagePopup(damage);
         if (this.health === 0) this.destroy();
     }
 
