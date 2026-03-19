@@ -27,6 +27,7 @@ export default class TurnManager {
         currentPlayer.canShoot = true;
         currentPlayer.fuel = currentPlayer.maxFuel;
         currentPlayer.fuelbar.width = currentPlayer.fuelbarOWidth;
+        currentPlayer.shieldMode = false;
         this.scene.updateTurnText(`Turno: ${currentPlayer.body.label}`);
     }
 

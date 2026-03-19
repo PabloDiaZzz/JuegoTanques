@@ -79,4 +79,11 @@ export default class Button {
     public destroy() {
         this.container.destroy();
     }
+
+    public setVisible(visible: boolean) {
+        this.container.setVisible(visible);
+        this.shadow.setVisible(visible);
+        this.bg.setVisible(visible);
+        this.text.setVisible(visible);
+    }
 }
