@@ -186,7 +186,7 @@ export default class CPU extends Tank {
             case 1:
                 if (Math.random() > 0.25) break;
                 const targetX = this.body.position.x + Phaser.Math.Between(-range, range);
-                finalPoint = Phaser.Math.Clamp(targetX, 50, this.scene.scale.width - 50);
+                finalPoint = Phaser.Math.Clamp(targetX, 50, (this.scene.scale.width * 2) - 50);
                 break;
             case 2:
                 const lastImpact = this.scene.lastGlobalImpact;
@@ -196,7 +196,7 @@ export default class CPU extends Tank {
                     let attempts = 0;
                     do {
                         final = this.body.position.x + Phaser.Math.Between(-range, range);
-                        final = Phaser.Math.Clamp(final, 50, this.scene.scale.width - 50);
+                        final = Phaser.Math.Clamp(final, 50, (this.scene.scale.width * 2) - 50);
                         const distToImpact = lastImpact ? Math.abs(final - lastImpact.x) : Infinity;
                         attempts++;
                         if (isNearImpact && distToImpact < dangerMargin) continue;
@@ -208,7 +208,7 @@ export default class CPU extends Tank {
                 let bestScore = -Infinity;
                 const step = 40;
                 for (let x = currentX - range; x <= currentX + range; x += step) {
-                    let testX = Phaser.Math.Clamp(x, 50, this.scene.scale.width - 50);
+                    let testX = Phaser.Math.Clamp(x, 50, (this.scene.scale.width * 2) - 50);
                     if (!this.canReach(testX)) continue;
 
                     const testY = this.getTerrainHeight(testX) - 20;
