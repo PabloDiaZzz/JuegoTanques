@@ -24,7 +24,15 @@ Puedes jugar tanto con teclado como con ratón.
 * **`ESPACIO`** o **`Clic Derecho`**: Alterna entre el **Modo Movimiento** y el **Modo Apuntado**.
 * **`Flecha Arriba`** o **`Clic Izquierdo`**: Dispara el proyectil.
 * **`Arrastrar el Ratón`**: Ajusta la fuerza del disparo usando el **Slider de Potencia** (barra vertical) situado en la parte izquierda de la pantalla.
+* **`Botón ESCUDO`**: Renuncia al disparo y activa una defensa especial que reduce drásticamente el daño recibido y finaliza el turno.
+* **`Botón SALTAR TURNO`**: Finaliza el turno actual sin realizar ninguna acción.
 * **`R`**: Reinicia la partida en cualquier momento.
+
+### Gestión de Cámara
+
+* **Botones `+` / `-`**: Aumentan o disminuyen el nivel de zoom.
+* **Botones `<` / `>`**: Permiten desplazar la cámara lateralmente de forma manual.
+* **Botón `CENTRAR`**: Enfoca la cámara de nuevo en el tanque que tiene el turno actual.
 
 ---
 
@@ -34,22 +42,34 @@ Puedes jugar tanto con teclado como con ratón.
 
 Durante tu turno, tu tanque puede estar en dos estados distintos:
 
-* **Modo Movimiento**: Te permite posicionarte en un lugar ventajoso. Ten en cuenta que los tanques pierden tracción si saltan o caen por pendientes muy pronunciadas.
-* **Modo Apuntado**: El tanque se ancla al suelo para prepararse para disparar. En este modo aparecerá una **guía de trayectoria (puntos)** que te indicará la fuerza y dirección inicial de la bala según cómo configures tu potencia y ángulo.
+* **Modo Movimiento**: Te permite posicionarte en un lugar ventajoso.
+* **Modo Apuntado**: El tanque se ancla al suelo para prepararse para disparar. En este modo aparecerá una **guía de trayectoria (puntos)** que te indicará la fuerza y dirección inicial de la bala.
 
-### 2. Sistema de Turnos
+### 2. Combustible y Energía
+* El movimiento consume **combustible** (máximo 150 unidades por turno). 
+* Al agotarse el combustible, el tanque no podrá desplazarse más hasta el siguiente turno.
 
-* El juego es estrictamente por turnos. Verás de quién es el turno en la esquina superior izquierda.
-* Una vez que disparas, no podrás hacer nada más. El turno pasará automáticamente al siguiente jugador cuando tu bala impacte contra un tanque, contra el suelo, o salga de los límites del mapa.
+### 3. Sistema de Turnos y Tiempo
+* El juego es estrictamente por turnos e incluye un **temporizador** en la parte superior.
+* Si el tiempo se agota, el turno pasará automáticamente al siguiente jugador.
 
-### 3. Daño y Supervivencia
+### 4. Destrucción del Terreno
+* Los proyectiles no solo dañan a los enemigos, sino que también destruyen el mapa creando **cráteres** realistas que afectan al movimiento y la visibilidad.
 
+### 5. Daño y Supervivencia
 * **Salud Inicial:** Todos los tanques comienzan con **100 Puntos de Vida (HP)**.
-* **Impactos:** Acertar un impacto directo con tu proyectil sobre un tanque rival le restará **25 Puntos de Vida**.
-* **Caídas al Vacío:** Ten mucho cuidado al moverte por los extremos del mapa. Si tu tanque cae al vacío, recibirá 100 puntos de daño y quedará destruido instantáneamente.
+* **Impactos:** Un impacto directo resta **25 HP**.
+* **Escudo:** Al activar el escudo, el daño recibido se reduce en un **75%**. La barra de salud se volverá azul para indicar que la protección está activa.
+* **Caídas al Vacío:** Si tu tanque cae por los límites del mapa, será destruido instantáneamente.
+
+### 6. Inteligencia Artificial (IA)
+Existen tres niveles de dificultad para los oponentes controlados por la CPU:
+* **Nivel 1:** Movimientos erráticos y puntería básica.
+* **Nivel 2:** Busca mejores posiciones y ajusta su potencia según impactos previos.
+* **Nivel 3:** IA avanzada que realiza simulaciones de tiro, busca cobertura, evita cráteres y prioriza objetivos con poca vida.
 
 ---
 
 ## 🛠️ Tecnologías Usadas
 
-Desarrollado con **TypeScript** y el motor gráfico **Phaser 3** usando el sistema de físicas avanzadas **Matter.js** para calcular colisiones realistas y tracción sobre terrenos irregulares.
+Desarrollado con **TypeScript** y el motor gráfico **Phaser 3** usando el sistema de físicas avanzadas **Matter.js** para calcular colisiones realistas, tracción y deformación del terreno.
