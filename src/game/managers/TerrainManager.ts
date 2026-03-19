@@ -64,7 +64,7 @@ export default class TerrainManager {
         return this.terrainBodies;
     }
 
-    public createCrater(impactX: number, impactY: number, radius: number = 70, depthFactor: number = 0.7): void {
+    public createCrater(impactX: number, impactY: number, radius: number = 70, depthFactor: number = 0.5): void {
         let changed = false;
 
         const angle = this.getAngleAtX(impactX);
