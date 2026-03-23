@@ -18,6 +18,10 @@ export default class Tank {
     public trajectoryGraphics!: Phaser.GameObjects.Graphics;
     public shieldMode: boolean = false;
     public currentAmmoType: AmmoType = 'NORMAL';
+    public ammoInventory: Record<AmmoType, number> = {
+        'NORMAL': -1,
+        'FRAG': 3
+    };
 
     protected fuelCost: number = 0.4;
     protected rotating: boolean = false;
@@ -366,6 +370,12 @@ export default class Tank {
 
     shoot(power: number): void {
         if (!this.canShoot) return;
+        const currentAmmoCount = this.ammoInventory[this.currentAmmoType];
+        if (currentAmmoCount === 0) return;
+        if (currentAmmoCount > 0) {
+            this.ammoInventory[this.currentAmmoType]--;
+            this.scene.updateAmmoUI();
+        }
 
         const cannon = this.getCannonPosition(this.currentBarrelRotation);
         const globalAngle = this.container.rotation + this.currentBarrelRotation;

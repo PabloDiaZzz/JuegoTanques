@@ -138,6 +138,9 @@ export class Game extends Scene {
 
     switchTurn() {
         this.turnManager.nextTurn();
+        if (this.currentTurn.ammoInventory[this.currentTurn.currentAmmoType] === 0) {
+            this.currentTurn.currentAmmoType = 'NORMAL';
+        }
         this.powerSlider.setValue(this.currentTurn.power);
         this.updateUIVisibility();
         this.turnTimer.reset();
@@ -155,6 +158,15 @@ export class Game extends Scene {
         this.uiCamera.ignore(projectile.visual)
     }
 
+    public   updateAmmoUI() {
+        if (!this.currentTurn || !this.ammoText) return;
+
+        const count = this.currentTurn.ammoInventory[this.currentTurn.currentAmmoType];
+        const countText = count === -1 ? 'INF' : count.toString();
+
+        this.ammoText.setText(`${this.currentTurn.currentAmmoType} (${countText})`);
+    }
+
     public updateUIVisibility(): void {
         const isHuman = this.currentTurn instanceof Player;
         this.powerSlider.setVisible(isHuman);
@@ -164,7 +176,7 @@ export class Game extends Scene {
         if (this.ammoText) {
             this.ammoText.setVisible(isHuman);
             if (isHuman && this.currentTurn) {
-                this.ammoText.setText(this.currentTurn.currentAmmoType);
+                this.updateAmmoUI();
             }
         }
     }
@@ -251,12 +263,12 @@ export class Game extends Scene {
             let index = this.availableAmmo.indexOf(this.currentTurn.currentAmmoType);
             index = (index - 1 + this.availableAmmo.length) % this.availableAmmo.length;
             this.currentTurn.currentAmmoType = this.availableAmmo[index];
-            this.ammoText.setText(this.currentTurn.currentAmmoType);
+            this.updateAmmoUI();
         });
         this.uiElements.push(this.ammoLeftBtn.container);
 
         // Texto Munición
-        this.ammoText = this.add.bitmapText(uiLeft + 10, uiTop + 305, 'miFuente', 'NORMAL', 14).setOrigin(0.5, 0.5).setScrollFactor(0);
+        this.ammoText = this.add.bitmapText(uiLeft + 10, uiTop + 305, 'miFuente', 'NORMAL (INF)', 14).setOrigin(0.5, 0.5).setScrollFactor(0);
         this.uiElements.push(this.ammoText);
 
         // Siguiente Munición
@@ -265,7 +277,7 @@ export class Game extends Scene {
             let index = this.availableAmmo.indexOf(this.currentTurn.currentAmmoType);
             index = (index + 1) % this.availableAmmo.length;
             this.currentTurn.currentAmmoType = this.availableAmmo[index];
-            this.ammoText.setText(this.currentTurn.currentAmmoType);
+            this.updateAmmoUI();
         });
         this.uiElements.push(this.ammoRightBtn.container);
 
