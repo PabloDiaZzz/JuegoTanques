@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { Game as GameScene } from '../scenes/Game';
+import { AmmoType } from './Projectile';
 
 export default class Tank {
     public moveMode: boolean = true;
@@ -16,6 +17,7 @@ export default class Tank {
     public fuelbarOWidth!: number;
     public trajectoryGraphics!: Phaser.GameObjects.Graphics;
     public shieldMode: boolean = false;
+    public currentAmmoType: AmmoType = 'NORMAL';
 
     protected fuelCost: number = 0.4;
     protected rotating: boolean = false;
@@ -244,7 +246,10 @@ export default class Tank {
         const angle: number = this.getGroundAngle(this.body.position.x + 5 * speed);
         const posY: number = this.body.bounds.max.y;
         const groundY: number = this.getTerrainHeight(this.body.position.x) - 2;
-        const distanceToGround = Math.abs(posY - groundY);
+        const distanceToGround = Math.min(
+            Math.abs(posY - groundY),
+            Math.abs(posY - this.getTerrainHeight(this.body.position.x + 15)),
+            Math.abs(posY - this.getTerrainHeight(this.body.position.x - 15)));
         const dFactor: number = distanceToGround <= 20 ? 1 : Phaser.Math.Clamp((40 - distanceToGround) / 20, 0, 1);
         if (dFactor > 0 && Math.abs(this.body.angle - this.getGroundAngle()) < 1) {
             this.applyMovementForce(angle, speed, dFactor, timeCorrection, direction);
@@ -365,7 +370,7 @@ export default class Tank {
         const cannon = this.getCannonPosition(this.currentBarrelRotation);
         const globalAngle = this.container.rotation + this.currentBarrelRotation;
 
-        this.scene.spawnProjectile(cannon.x, cannon.y, globalAngle, power, this);
+        this.scene.spawnProjectile(cannon.x, cannon.y, globalAngle, power, this, this.currentAmmoType);
         this.canShoot = false;
     }
 

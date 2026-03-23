@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { Scene } from 'phaser';
 import Tank from '../entities/Tank';
-import Projectile from '../entities/Projectile';
+import Projectile, { AmmoType } from '../entities/Projectile';
 import InputManager from '../managers/InputManager';
 import TerrainManager from '../managers/TerrainManager';
 import PlayerManager from '../managers/PlayerManager';
@@ -141,11 +141,13 @@ export class Game extends Scene {
         this.focusCameraOnTarget(this.currentTurn.container);
     }
 
-    spawnProjectile(x: number, y: number, angle: number, power: number, owner: Tank) {
+    spawnProjectile(x: number, y: number, angle: number, power: number, owner: Tank, ammoType: AmmoType = 'NORMAL', isChild: boolean = false) {
         // TODO this.shoot.play();
-        const projectile = new Projectile(this, x, y, angle, power, owner)
+        const projectile = new Projectile(this, x, y, angle, power, owner, ammoType, isChild)
         this.projectiles.push(projectile);
-        this.focusCameraOnTarget(projectile.visual);
+        if (!isChild) {
+            this.focusCameraOnTarget(projectile.visual);
+        }
         this.uiCamera.ignore(projectile.visual)
     }
 
