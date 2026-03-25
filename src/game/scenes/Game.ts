@@ -149,7 +149,7 @@ export class Game extends Scene {
     }
 
     spawnProjectile(x: number, y: number, angle: number, power: number, owner: Tank, ammoType: AmmoType = 'NORMAL', isChild: boolean = false) {
-        // TODO this.shoot.play();
+        if (!isChild) this.shoot.play();
         const projectile = new Projectile(this, x, y, angle, power, owner, ammoType, isChild)
         this.projectiles.push(projectile);
         if (!isChild) {
