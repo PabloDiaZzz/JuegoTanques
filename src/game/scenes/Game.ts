@@ -36,7 +36,7 @@ export class Game extends Scene {
     private ammoLeftBtn!: Button;
     private ammoRightBtn!: Button;
     private ammoText!: Phaser.GameObjects.BitmapText;
-    private readonly availableAmmo: any[] = ['NORMAL', 'FRAG'];
+    private readonly availableAmmo: any[] = ['NORMAL', 'FRAG', 'BOUNCE'];
 
     constructor() {
         super('Game');

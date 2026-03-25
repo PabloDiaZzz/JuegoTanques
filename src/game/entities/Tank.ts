@@ -20,7 +20,8 @@ export default class Tank {
     public currentAmmoType: AmmoType = 'NORMAL';
     public ammoInventory: Record<AmmoType, number> = {
         'NORMAL': -1,
-        'FRAG': 3
+        'FRAG': 3,
+        'BOUNCE': 3
     };
 
     protected fuelCost: number = 0.4;
