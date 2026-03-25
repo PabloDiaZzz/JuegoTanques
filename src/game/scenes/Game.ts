@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { Scene } from 'phaser';
 import Tank from '../entities/Tank';
-import Projectile from '../entities/Projectile';
+import Projectile, { AmmoType } from '../entities/Projectile';
 import InputManager from '../managers/InputManager';
 import TerrainManager from '../managers/TerrainManager';
 import PlayerManager from '../managers/PlayerManager';
@@ -33,6 +33,10 @@ export class Game extends Scene {
     private uiElements: Phaser.GameObjects.GameObject[] = []
     private cameraFollowPoint = new Phaser.Math.Vector2();
     private cameraTarget: any = null;
+    private ammoLeftBtn!: Button;
+    private ammoRightBtn!: Button;
+    private ammoText!: Phaser.GameObjects.BitmapText;
+    private readonly availableAmmo: any[] = ['NORMAL', 'FRAG', 'BOUNCE'];
 
     constructor() {
         super('Game');
@@ -134,6 +138,9 @@ export class Game extends Scene {
 
     switchTurn() {
         this.turnManager.nextTurn();
+        if (this.currentTurn.ammoInventory[this.currentTurn.currentAmmoType] === 0) {
+            this.currentTurn.currentAmmoType = 'NORMAL';
+        }
         this.powerSlider.setValue(this.currentTurn.power);
         this.updateUIVisibility();
         this.turnTimer.reset();
@@ -141,18 +148,37 @@ export class Game extends Scene {
         this.focusCameraOnTarget(this.currentTurn.container);
     }
 
-    spawnProjectile(x: number, y: number, angle: number, power: number, owner: Tank) {
+    spawnProjectile(x: number, y: number, angle: number, power: number, owner: Tank, ammoType: AmmoType = 'NORMAL', isChild: boolean = false) {
         // TODO this.shoot.play();
-        const projectile = new Projectile(this, x, y, angle, power, owner)
+        const projectile = new Projectile(this, x, y, angle, power, owner, ammoType, isChild)
         this.projectiles.push(projectile);
-        this.focusCameraOnTarget(projectile.visual);
+        if (!isChild) {
+            this.focusCameraOnTarget(projectile.visual);
+        }
         this.uiCamera.ignore(projectile.visual)
+    }
+
+    public   updateAmmoUI() {
+        if (!this.currentTurn || !this.ammoText) return;
+
+        const count = this.currentTurn.ammoInventory[this.currentTurn.currentAmmoType];
+        const countText = count === -1 ? 'INF' : count.toString();
+
+        this.ammoText.setText(`${this.currentTurn.currentAmmoType} (${countText})`);
     }
 
     public updateUIVisibility(): void {
         const isHuman = this.currentTurn instanceof Player;
         this.powerSlider.setVisible(isHuman);
         this.shieldBtn.setVisible(isHuman);
+        if (this.ammoLeftBtn) this.ammoLeftBtn.setVisible(isHuman);
+        if (this.ammoRightBtn) this.ammoRightBtn.setVisible(isHuman);
+        if (this.ammoText) {
+            this.ammoText.setVisible(isHuman);
+            if (isHuman && this.currentTurn) {
+                this.updateAmmoUI();
+            }
+        }
     }
 
     private setupUI() {
@@ -203,7 +229,7 @@ export class Game extends Scene {
         this.uiElements.push(resetCameraBtn.container);
 
         // SLIDER POTENCIA
-        this.powerSlider = new Slider(this, 50, 80, 200, 150, (value) => {
+        this.powerSlider = new Slider(this, 50, 90, 200, 150, (value) => {
             if (this.currentTurn) {
                 this.currentTurn.power = value;
             }
@@ -230,6 +256,30 @@ export class Game extends Scene {
         // TEXTO TURNO
         this.textoTurno = this.add.bitmapText(20, 10, 'miFuente', 'Turno: ' + this.turnManager.getCurrentPlayer().body.label, 15).setScrollFactor(0);
         this.uiElements.push(this.textoTurno)
+
+        // Anterior Munición
+        this.ammoLeftBtn = new Button(this, 0x333333, uiLeft + 10 - (btnSize + spacing) / 2, uiTop + 275, btnSize, btnSize, '<', () => {
+            if (!this.currentTurn) return;
+            let index = this.availableAmmo.indexOf(this.currentTurn.currentAmmoType);
+            index = (index - 1 + this.availableAmmo.length) % this.availableAmmo.length;
+            this.currentTurn.currentAmmoType = this.availableAmmo[index];
+            this.updateAmmoUI();
+        });
+        this.uiElements.push(this.ammoLeftBtn.container);
+
+        // Texto Munición
+        this.ammoText = this.add.bitmapText(uiLeft + 10, uiTop + 305, 'miFuente', 'NORMAL (INF)', 14).setOrigin(0.5, 0.5).setScrollFactor(0);
+        this.uiElements.push(this.ammoText);
+
+        // Siguiente Munición
+        this.ammoRightBtn = new Button(this, 0x333333, uiLeft + 10 + (btnSize + spacing) / 2, uiTop + 275, btnSize, btnSize, '>', () => {
+            if (!this.currentTurn) return;
+            let index = this.availableAmmo.indexOf(this.currentTurn.currentAmmoType);
+            index = (index + 1) % this.availableAmmo.length;
+            this.currentTurn.currentAmmoType = this.availableAmmo[index];
+            this.updateAmmoUI();
+        });
+        this.uiElements.push(this.ammoRightBtn.container);
 
         this.cameras.main.ignore(this.uiElements);
 

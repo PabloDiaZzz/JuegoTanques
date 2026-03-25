@@ -17,7 +17,7 @@ export default class Button {
         this.width = width;
         this.color = color;
         this.shadow = scene.add.graphics();
-        this.shadow.fillStyle(0x000000, 0.5);
+        this.shadow.fillStyle(0x000000, 0.0);
         this.shadow.fillRoundedRect(-this.width / 2 + 4, - this.height / 2 + 6, this.width, this.height, this.radius);
         this.container = scene.add.container(x, y);
         this.bg = scene.add.graphics();
@@ -43,7 +43,7 @@ export default class Button {
             this.drawBackground(this.color - 0x222222);
             this.bg.y = 4;
             this.text.y = 4;
-            this.shadow.alpha = 0.2;
+            this.shadow.alpha = 0.0;
             onClick();
         });
 
